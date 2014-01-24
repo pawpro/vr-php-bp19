@@ -69,7 +69,6 @@ http {
         include fastcgi_params;
         fastcgi_param   HTTPS $my_https if_not_empty;
         fastcgi_pass    php_fpm;
-        fastcgi_intercept_errors on;
     }
 } 
 }

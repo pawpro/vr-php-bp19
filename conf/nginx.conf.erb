@@ -45,7 +45,7 @@ http {
     }
 
     location ~ ^/opi/(images|js|css)/ {
-        rewrite ^/opi/(images|js|css)/(.*) /$1/$2;
+        rewrite ^/opi/(.*) /$1;
     }
 
     location ~ ^/(images|js|css)/ {
@@ -68,7 +68,8 @@ http {
         fastcgi_index index.php;
         include fastcgi_params;
         fastcgi_param   HTTPS $my_https if_not_empty;
+        fastcgi_param   HTTP_X_FORWARDED_PROTO "https";
         fastcgi_pass    php_fpm;
     }
-} 
+  }
 }

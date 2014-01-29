@@ -44,6 +44,10 @@ http {
         empty_gif;
     }
 
+    location ~* ^/opi/js/[a-z_\-]+.[0-9a-f]+.min {
+        rewrite ^/opi/js/([a-z_\-]+)\.[0-9a-f]+.min.js /opi/js/$1.min.js;
+    }
+
     location ~ ^/opi/(images|js|css)/ {
         rewrite ^/opi/(.*) /$1;
     }

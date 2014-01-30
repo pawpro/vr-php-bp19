@@ -11,10 +11,11 @@ LIBMEMCACHED_VERSION=1.0.7
 PHP_VERSION=5.4.17
 NEWRELIC_VERSION=2.9.5.78
 S3_BUCKET=heroku-buildpack-php-tyler
-# END CONFIG
-
-#
+OPI_URL="http://10.33.0.14/vr/"
 S3_URL="https://s3.amazonaws.com/${S3_BUCKET}"
+
+REPO_URL=${OPI_URL}
+# END CONFIG
 
 MANIFEST_FILE="manifest.md5sum"
 NGINX_FILE="nginx-${NGINX_VERSION}-heroku.tar.gz"
@@ -23,12 +24,12 @@ MEMCACHED_FILE="libmemcached-${LIBMEMCACHED_VERSION}.tar.gz"
 PHP_FILE="php-${PHP_VERSION}-with-fpm-heroku.tar.gz"
 NEWRELIC_FILE="newrelic-${NEWRELIC_VERSION}-heroku.tar.gz"
 
-MANIFEST_URL="${S3_URL}/${MANIFEST_FILE}"
-NGINX_URL="${S3_URL}/${NGINX_FILE}"
-MCRYPT_URL="${S3_URL}/${MCRYPT_FILE}"
-MEMCACHED_URL="${S3_URL}/${MEMCACHED_FILE}"
-PHP_URL="${S3_URL}/${PHP_FILE}"
-NEWRELIC_URL="${S3_URL}/${NEWRELIC_FILE}"
+MANIFEST_URL="${REPO_URL}/${MANIFEST_FILE}"
+NGINX_URL="${REPO_URL}/${NGINX_FILE}"
+MCRYPT_URL="${REPO_URL}/${MCRYPT_FILE}"
+MEMCACHED_URL="${REPO_URL}/${MEMCACHED_FILE}"
+PHP_URL="${REPO_URL}/${PHP_FILE}"
+NEWRELIC_URL="${REPO_URL}/${NEWRELIC_FILE}"
 COMPOSER_URL="http://getcomposer.org/composer.phar"
 #
 
@@ -185,28 +186,28 @@ tar xzf ${NEWRELIC_FILE} -C ${BUILD_DIR}/local
 
 popd > /dev/null
 
-# Composer Installation
-pushd ${BUILD_DIR} > /dev/null
-if [ -f "composer.json" ]
-then
-	echo "-----> Installing dependencies using Composer"
-	GIT_DIR_ORIG=${GIT_DIR}
-	unset GIT_DIR
+# # Composer Installation
+# pushd ${BUILD_DIR} > /dev/null
+# if [ -f "composer.json" ]
+# then
+# 	echo "-----> Installing dependencies using Composer"
+# 	GIT_DIR_ORIG=${GIT_DIR}
+# 	unset GIT_DIR
 
-	if [ ! -f "composer.phar" ]
-	then
-		echo "Fetching composer.phar" | indent
-		echo ${COMPOSER_URL} | indent
-		download_url ${COMPOSER_URL}
-	fi
+# 	if [ ! -f "composer.phar" ]
+# 	then
+# 		echo "Fetching composer.phar" | indent
+# 		echo ${COMPOSER_URL} | indent
+# 		download_url ${COMPOSER_URL}
+# 	fi
 
-	# do the deed!
-	echo "Running: php composer.phar install" | indent
-	LD_LIBRARY_PATH="${BUILD_DIR}/local/lib" ${BUILD_DIR}/vendor/php/bin/php composer.phar install -n | indent
+# 	# do the deed!
+# 	echo "Running: php composer.phar install" | indent
+# 	LD_LIBRARY_PATH="${BUILD_DIR}/local/lib" ${BUILD_DIR}/vendor/php/bin/php composer.phar install -n | indent
 
-	export GIT_DIR=${GIT_DIR_ORIG}
-fi
-popd > /dev/null
+# 	export GIT_DIR=${GIT_DIR_ORIG}
+# fi
+# popd > /dev/null
 
 # Config files
 echo "-----> Copying config files"

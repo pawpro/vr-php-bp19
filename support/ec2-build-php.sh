@@ -4,14 +4,15 @@
 
 ## EDIT
 export S3_BUCKET="heroku-buildpack-php-tyler"
-export LIBMCRYPT_VERSION="2.5.9"
-export LIFREETYPE_VERSION="2.4.12"
-export PHP_VERSION="5.4.17"
-export APC_VERSION="3.1.10"
-export PHPREDIS_VERSION="2.2.2"
-export LIBMEMCACHED_VERSION="1.0.7"
-export MEMCACHED_VERSION="2.0.1"
-export NEWRELIC_VERSION="2.9.5.78"
+export LIBMCRYPT_VERSION="2.5.8"
+export LIFREETYPE_VERSION="2.5.3" 
+export PHP_VERSION="5.5.13"
+#export APC_VERSION="3.1.10"
+#export PHPREDIS_VERSION="2.2.2"
+#export MEMCACHE=1
+export LIBMEMCACHED_VERSION="1.0.18"
+export MEMCACHED_VERSION="2.2.0"
+export NEWRELIC_VERSION="4.10.1.62"
 ## END EDIT
 
 set -e
@@ -48,12 +49,12 @@ ccache \
 git-core
 #libmcrypt-dev \
 
-# update path to use ccache
-export PATH=/usr/lib/ccache:$PATH
+# # update path to use ccache
+# export PATH=/usr/lib/ccache:$PATH
 
-# retrieve ccache
-echo "+ Fetching compiler cache..."
-curl -f -L "https://s3.amazonaws.com/${S3_BUCKET}/ccache.tar.bz2" -o - | tar xj
+# # retrieve ccache
+# echo "+ Fetching compiler cache..."
+# curl -f -L "https://s3.amazonaws.com/${S3_BUCKET}/ccache.tar.bz2" -o - | tar xj
 
 mkdir -p build && pushd build
 
@@ -68,7 +69,7 @@ curl -L "https://s3.amazonaws.com/${S3_BUCKET}/libmemcached-${LIBMEMCACHED_VERSI
 
 echo "+ Fetching freetype libraries..."
 mkdir -p /app/local
-curl -L "http://download.savannah.gnu.org/releases/freetype/freetype-${LIFREETYPE_VERSION}.tar.gz" -o - | tar xz -C /app/local
+curl -L "https://s3.amazonaws.com/${S3_BUCKET}/freetype-${LIFREETYPE_VERSION}.tar.gz" -o - | tar xz -C /app/local
 
 echo "+ Fetching PHP sources..."
 #fetch php, extract
@@ -125,52 +126,72 @@ export PATH=/app/vendor/php/bin:$PATH
 # configure pear
 pear config-set php_dir /app/vendor/php
 
-echo "+ Installing APC..."
-# install apc from source
-curl -L http://pecl.php.net/get/APC-${APC_VERSION}.tgz -o - | tar xz
-pushd APC-${APC_VERSION}
-# php apc jokers didn't update the version string in 3.1.10.
-sed -i 's/PHP_APC_VERSION "3.1.9"/PHP_APC_VERSION "3.1.10"/g' php_apc.h
-phpize
-./configure --enable-apc --enable-apc-filehits --with-php-config=/app/vendor/php/bin/php-config
-make && make install
-popd
+if [[ -n "$APC_VERSION" ]]; then
+    echo "+ Installing APC..."
+    # install apc from source
+    curl -L http://pecl.php.net/get/APC-${APC_VERSION}.tgz -o - | tar xz
+    pushd APC-${APC_VERSION}
+    # php apc jokers didn't update the version string in 3.1.10.
+    sed -i 's/PHP_APC_VERSION "3.1.9"/PHP_APC_VERSION "3.1.10"/g' php_apc.h
+    phpize
+    ./configure --enable-apc --enable-apc-filehits --with-php-config=/app/vendor/php/bin/php-config
+    make && make install
+    popd
+else
+    echo "- Skipping APC"
+fi
 
-echo "+ Installing memcache..."
-# install memcache
-yes '' | pecl install memcache-beta
-# answer questions
-# "You should add "extension=memcache.so" to php.ini"
+if [[ -n "$MEMCACHE" ]]; then
+    echo "+ Installing memcache..."
+    # install memcache
+    yes '' | pecl install memcache-beta
+    #answer questions
+    #"You should add "extension=memcache.so" to php.ini"
+else
+    echo "- Skipping Memcache"
+fi
 
-echo "+ Installing memcached from source..."
-# install apc from source
-curl -L http://pecl.php.net/get/memcached-${MEMCACHED_VERSION}.tgz -o - | tar xz
-pushd memcached-${MEMCACHED_VERSION}
-# edit config.m4 line 21 so no => yes ############### IMPORTANT!!! ###############
-sed -i -e '21 s/no, no/yes, yes/' ./config.m4
-sed -i -e '18 s/no, no/yes, yes/' ./config.m4
-phpize
-./configure --with-libmemcached-dir=/app/local --with-php-config=/app/vendor/php/bin/php-config
-make && make install
-popd
+if [[ -n "$MEMCACHED_VERSION" ]]; then
+    echo "+ Installing memcached from source..."
 
-echo "+ Installing phpredis..."
-# install phpredis
-git clone git://github.com/nicolasff/phpredis.git
-pushd phpredis
-git checkout ${PHPREDIS_VERSION}
+    curl -L https://s3.amazonaws.com/${S3_BUCKET}/memcached-${MEMCACHED_VERSION}.tgz -o - | tar xz
+    pushd memcached-${MEMCACHED_VERSION}
+    # edit config.m4 line 21 so no => yes ############### IMPORTANT!!! ###############
+    # sed -i -e '21 s/no, no/yes, yes/' ./config.m4 #msgpack?
+    # sed -i -e '18 s/no, no/yes, yes/' ./config.m4 #json?
+    phpize
+    ./configure --with-libmemcached-dir=/app/local --with-php-config=/app/vendor/php/bin/php-config
+    make && make install
+    popd
+else
+    echo "- Skipping Memcached"
+fi
 
-phpize
-./configure
-make && make install
-# add "extension=redis.so" to php.ini
-popd
+if [[ -n "$PHPREDIS_VERSION" ]]; then
+    echo "+ Installing phpredis..."
+    # install phpredis
+    git clone git://github.com/nicolasff/phpredis.git
+    pushd phpredis
+    git checkout ${PHPREDIS_VERSION}
 
-echo "+ Install newrelic..."
-curl -L "http://download.newrelic.com/php_agent/archive/${NEWRELIC_VERSION}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
-pushd newrelic-php5-${NEWRELIC_VERSION}-linux
-cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
-popd
+    phpize
+    ./configure
+    make && make install
+    # add "extension=redis.so" to php.ini
+    popd
+else
+    echo "- Skipping PHP Redis"
+fi
+
+if [[ -n "$NEWRELIC_VERSION" ]]; then
+    echo "+ Install newrelic..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
+    pushd newrelic-php5-${NEWRELIC_VERSION}-linux
+    cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
+    popd
+else
+    echo "- Skipping NewRelic"
+fi
 
 echo "+ Packaging PHP..."
 # package PHP
@@ -183,7 +204,7 @@ popd
 
 echo "+ Binaries are packaged in $orig_dir/*.tar.gz. Upload to s3 bucket of your choice."
 
-tar cjf ccache.tar.bz2 .ccache/
+# tar cjf ccache.tar.bz2 .ccache/
 
-echo "+ Compiler cache packaged in $orig_dir/ccache.tar.bz2. Upload to s3 bucket of your choice."
+# echo "+ Compiler cache packaged in $orig_dir/ccache.tar.bz2. Upload to s3 bucket of your choice."
 echo "+ Done!"

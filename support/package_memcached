@@ -1,0 +1,32 @@
+#!/bin/bash
+
+set -e
+set -o pipefail
+
+## EDIT
+export S3_BUCKET="yg-php-buildpack-opi"
+export MEMCACHED_VERSION="1.4.20"
+## END EDIT
+
+orig_dir=$( pwd )
+rm -rf build
+mkdir -p build
+pushd build
+
+echo "+ Fetching memcached server sources..."
+rm -rf /app/vendor/memcached
+mkdir -p /app/vendor/memcached
+curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcached-server-${MEMCACHED_VERSION}.tar.gz" -o - | tar xz
+pushd memcached-server-${MEMCACHED_VERSION}
+./configure --prefix=/app/vendor/memcached
+make
+make install
+popd
+
+echo "+ Packaging memcached server..."
+pushd /app/vendor/memcached
+tar czf $orig_dir/memcached-server-${MEMCACHED_VERSION}-vr.tar.gz *
+popd
+
+echo "+ Binaries are packaged in $orig_dir/*.tar.gz. Upload to s3 bucket of your choice."
+echo "+ Done!"

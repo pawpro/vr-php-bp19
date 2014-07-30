@@ -1,0 +1,226 @@
+#!/bin/bash
+
+## EDIT
+export S3_BUCKET="yg-php-buildpack-opi"
+export LIBMCRYPT_VERSION="2.5.8"
+export LIBJPEG_VERSION="9a" 
+export PHP_VERSION="5.5.15"
+export LIBMEMCACHED_VERSION="1.0.18"
+export MEMCACHED_VERSION="2.2.0"
+export MEMCACHE_VERSION="3.0.8"
+export NEWRELIC_VERSION="4.10.1.62"
+export RABBITMQ_VERSION="1.4.0"
+export LIBRABBITMQ_VERSION="0.5.0"
+export OPENSSL_VERSION="0_9_8"
+
+## END EDIT
+
+set -e
+set -o pipefail
+
+orig_dir=$( pwd )
+
+echo "+ Updating apt-get sources..."
+apt-get -y update
+
+echo "+ Installing build dependencies..."
+# install build deps
+apt-get -y install g++ \
+gcc \
+libpng-dev \
+libxml2-dev \
+libmysqlclient-dev \
+libpq-dev \
+libpcre3-dev \
+curl \
+libcurl3 \
+libcurl3-dev \
+libbz2-dev \
+autoconf \
+git-core
+
+rm -rf /app
+rm -rf /root/build
+mkdir -p build
+pushd build
+
+if [[ -n "$LIBMCRYPT_VERSION" ]]; then
+    echo "+ Fetching libmcrypt libraries..."
+    mkdir -p /app/local
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/libmcrypt-${LIBMCRYPT_VERSION}.tar.gz" -o - | tar xz -C /app/local
+else
+    echo "- Skipping libmcrypt"
+fi
+
+if [[ -n "$OPENSSL_VERSION" ]]; then
+    echo "+ Fetching openssl sources..."
+    mkdir -p /app/local
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/openssl_${OPENSSL_VERSION}.tar.gz" -o - | tar xz
+    pushd openssl_${OPENSSL_VERSION}
+    ./config --prefix=/app/local --openssldir=/app/local/openssl shared no-threads
+    make
+    make install
+    popd
+else
+    echo "- Skipping openssl"
+fi
+
+if [[ -n "$LIBMEMCACHED_VERSION" ]]; then
+    echo "+ Fetching libmemcached libraries..."
+    mkdir -p /app/local
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/libmemcached-${LIBMEMCACHED_VERSION}.tar.gz" -o - | tar xz
+    pushd libmemcached-${LIBMEMCACHED_VERSION}
+    ./configure --prefix=/app/local
+    make install
+    popd
+else
+    echo "- Skipping libmemcached"
+fi
+
+if [[ -n "$LIBFREETYPE_VERSION" ]]; then
+    echo "+ Fetching freetype libraries..."
+    mkdir -p /app/local
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/freetype-${LIBFREETYPE_VERSION}.tar.gz" -o - | tar xz
+    pushd freetype-${LIBFREETYPE_VERSION}
+    ./configure --prefix=/app/local
+    make install
+    popd
+else
+    echo "- Skipping Custom Freetype"
+fi
+
+if [[ -n "$LIBJPEG_VERSION" ]]; then
+    echo "+ Fetching libjpeg libraries..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/jpegsrc.v${LIBJPEG_VERSION}.tar.gz" | tar xz
+    pushd jpeg-${LIBJPEG_VERSION}
+    ./configure --prefix=/app/local
+    make install
+    popd
+else
+    echo "- Skipping libjpeg"
+fi
+
+if [[ -n "$LIBRABBITMQ_VERSION" ]]; then
+    echo "+ Fetching RABBITMQ-C libraries..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/rabbitmq-c-${LIBRABBITMQ_VERSION}.tar.gz" | tar xz
+    pushd rabbitmq-c-${LIBRABBITMQ_VERSION}
+    ./configure --prefix=/app/local
+    make install
+    popd
+else
+    echo "- Skipping RABBITMQ-C"
+fi
+
+echo "+ Fetching PHP sources..."
+curl -L "https://s3.amazonaws.com/${S3_BUCKET}/php-$PHP_VERSION.tar.gz"  -o - | tar xz
+
+pushd php-$PHP_VERSION
+
+echo "+ Configuring PHP..."
+rm configure
+./buildconf --force
+./configure \
+--prefix=/app/vendor/php \
+--with-config-file-path=/app/vendor/php \
+--with-config-file-scan-dir=/app/vendor/php/etc.d \
+--with-freetype-dir=/app/local \
+--with-mcrypt=/app/local \
+--with-mysql=mysqlnd \
+--with-mysqli=mysqlnd \
+--with-pdo-mysql=mysqlnd \
+--with-bz2 \
+--with-curl \
+--with-gd \
+--with-gettext \
+--with-jpeg-dir=/app/local \
+--with-iconv \
+--with-mhash \
+--with-openssl-dir=/app/local \
+--with-pcre-regex \
+--with-png-dir \
+--with-zlib \
+--enable-bcmath \
+--enable-fpm \
+--enable-gd-native-ttf \
+--enable-inline-optimization \
+--enable-libxml \
+--enable-opcache \
+--enable-phar \
+--enable-mbregex \
+--enable-mbstring \
+--enable-zip \
+--disable-cgi \
+--disable-debug \
+--disable-pcntl \
+--disable-rpath \
+--disable-soap
+
+echo "+ Compiling PHP..."
+# build & install it
+make install
+
+popd
+
+# update path
+export PATH=/app/vendor/php/bin:$PATH
+
+# configure pear
+pear config-set php_dir /app/vendor/php
+
+if [[ -n "$MEMCACHE_VERSION" ]]; then
+    echo "+ Installing Memcache..."
+    set +e
+    yes '' | pecl install memcache-${MEMCACHE_VERSION}
+    set -e
+else
+    echo "- Skipping Memcache"
+fi
+
+if [[ -n "$MEMCACHED_VERSION" ]]; then
+    echo "+ Installing Memcached..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcached-${MEMCACHED_VERSION}.tgz" | tar xz
+    pushd memcached-${MEMCACHED_VERSION}
+    phpize
+    ./configure --prefix=/app/local --with-php-config=/app/vendor/php/bin/php-config --with-libmemcached-dir=/app/local --disable-memcached-sasl
+    make install
+    popd
+else
+    echo "- Skipping Memcached"
+fi
+
+if [[ -n "$RABBITMQ_VERSION" ]]; then
+    echo "+ Installing RabbitMQ..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/amqp-${RABBITMQ_VERSION}.tgz" | tar xz
+    pushd amqp-${RABBITMQ_VERSION}
+    phpize
+    ./configure --with-amqp --with-librabbitmq-dir=/app/local --with-php-config=/app/vendor/php/bin/php-config
+    make install
+    popd
+else
+    echo "- Skipping RabbitMQ"
+fi
+
+if [[ -n "$NEWRELIC_VERSION" ]]; then
+    echo "+ Install newrelic..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
+    pushd newrelic-php5-${NEWRELIC_VERSION}-linux
+    cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
+    popd
+else
+    echo "- Skipping NewRelic"
+fi
+
+echo "+ Packaging PHP..."
+echo ${PHP_VERSION} > /app/vendor/php/VERSION
+pushd /app/vendor/php
+tar czf $orig_dir/php-${PHP_VERSION}-with-fpm-vr.tar.gz *
+popd
+
+pushd /app/local
+tar czf $orig_dir/php-5.5.15-libs-vr.tar.gz *
+popd
+
+popd
+
+echo "+ Binaries are packaged in $orig_dir/*.tar.gz. Upload to s3 bucket of your choice."
+echo "+ Done!"

@@ -7,14 +7,12 @@ set -o pipefail
 # START CONFIG
 APP_NAME="opifront-vr-UK"
 
-NGINX_VERSION=1.4.1
-# LIBMCRYPT_VERSION=2.5.8
-PHP_VERSION=5.5.15
-NEWRELIC_VERSION=4.10.1.62
-# LIBJPEG_VERSION=9a
 S3_BUCKET=yg-php-buildpack-opi
 S3_URL="https://s3.amazonaws.com/${S3_BUCKET}"
-
+NGINX_VERSION=1.4.1
+PHP_VERSION=5.5.15
+NEWRELIC_VERSION=4.10.1.62
+MEMCACHED_VERSION=1.4.20
 REPO_URL=${S3_URL}
 # END CONFIG
 
@@ -22,11 +20,13 @@ MANIFEST_FILE="manifest.md5sum"
 NGINX_FILE="nginx-${NGINX_VERSION}-heroku.tar.gz"
 PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.tar.gz"
 PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.tar.gz"
+MEMCACHED_FILE="memcached-server-${MEMCACHED_VERSION}-vr.tar.gz"
 
 MANIFEST_URL="${REPO_URL}/${MANIFEST_FILE}"
 NGINX_URL="${REPO_URL}/${NGINX_FILE}"
 PHP_URL="${REPO_URL}/${PHP_FILE}"
 PHP_LIBS_URL="${REPO_URL}/${PHP_LIBS_FILE}"
+MEMCACHED_URL="${REPO_URL}/${MEMCACHED_FILE}"
 COMPOSER_URL="http://getcomposer.org/composer.phar"
 #
 
@@ -142,6 +142,28 @@ fi
 mkdir -p ${BUILD_DIR}/local
 tar xzf ${PHP_LIBS_FILE} -C ${BUILD_DIR}/local
 
+
+echo "-----> Installing Memcached"
+if [ -f "$MEMCACHED_FILE" ]
+then
+	if check_md5 "${MEMCACHED_FILE}"
+	then
+		echo "Bundling Memcached v${MEMCACHED_VERSION}" | indent
+		echo ${MEMCACHED_URL} | indent
+		download_url ${MEMCACHED_URL}
+	else
+		echo "Using cached PHP v${MEMCACHED_VERSION}" | indent
+	fi
+else
+	echo "Bundling PHP v${MEMCACHED_VERSION}" | indent
+	echo ${MEMCACHED_URL} | indent
+	download_url ${MEMCACHED_URL}
+fi
+
+mkdir -p ${BUILD_DIR}/vendor/memcached
+tar xzf ${MEMCACHED_FILE} -C ${BUILD_DIR}/vendor/memcached
+export PATH="${PATH}:${BUILD_DIR}/vendor/memcached/bin"
+
 # newrelic
 echo "-----> Installing newrelic"
 if [ -f "${NEWRELIC_FILE}" ]
@@ -253,6 +275,7 @@ if [ "\${NEW_RELIC_LICENSE_KEY}" ]; then
 fi
 /app/vendor/php/sbin/php-fpm
 /app/vendor/nginx/sbin/nginx
+/app/vendor/memcached/bin/memcached -u nobody -d -p 11211 -U 112211 -m 64
 EOF
 chmod +x boot.sh
 

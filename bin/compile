@@ -163,14 +163,6 @@ mkdir -p ${BUILD_DIR}/vendor/memcached
 tar xzf ${MEMCACHED_FILE} -C ${BUILD_DIR}/vendor/memcached
 export PATH="${PATH}:${BUILD_DIR}/vendor/memcached/bin"
 
-# newrelic
-echo "-----> Installing newrelic"
-if [ -f "${NEWRELIC_FILE}" ]
-then
-	sed -i "s/__APPNAME__/${APP_NAME}/g" $LP_DIR/conf/etc.d/05_newrelic.ini
-    mkdir -p /app/local/var/log/newrelic
-fi
-
 # Composer Installation
 pushd ${BUILD_DIR} > /dev/null
 if [ -f "composer.json" ]
@@ -203,6 +195,13 @@ cp -a $LP_DIR/conf/etc.d ${BUILD_DIR}/vendor/php/
 cp $LP_DIR/conf/nginx.conf.erb ${BUILD_DIR}/vendor/nginx/conf/nginx.conf.erb
 cp -n ${LP_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
 #erb $LP_DIR/conf/nginx.conf.erb > ${BUILD_DIR}/vendor/nginx/conf/nginx.conf
+
+# newrelic
+echo "-----> Installing newrelic"
+if [ -f "${NEWRELIC_FILE}" ]
+then
+	sed -i "s/__APPNAME__/${APP_NAME}/g" ${BUILD_DIR}/vendor/php/etc.d/05_newrelic.ini
+fi
 
 echo "-----> Installing boot script"
 cd $BUILD_DIR
@@ -266,6 +265,7 @@ for var in \`env | cut -f1 -d=\`; do
 	echo "env[\$var] = \\$\${var}" >> /app/vendor/php/etc/php-fpm.conf
 done
 
+mkdir -p /app/local/var/log/newrelic
 touch /app/vendor/nginx/logs/access.log /app/vendor/nginx/logs/error.log /app/vendor/php/var/log/php-fpm.log /app/vendor/php/var/log/application.log /app/vendor/php/var/log/php-errors.log /app/local/var/log/newrelic/newrelic-daemon.log /app/local/var/log/newrelic/php_agent.log
 mkdir -p client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp application/cache
 (tail -f -n 0 /app/vendor/nginx/logs/*.log /app/vendor/php/var/log/*.log /app/local/var/log/newrelic/*.log &)

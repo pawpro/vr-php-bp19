@@ -17,7 +17,7 @@ REPO_URL=${S3_URL}
 # END CONFIG
 
 MANIFEST_FILE="manifest.md5sum"
-NGINX_FILE="nginx-${NGINX_VERSION}-heroku.tar.gz"
+NGINX_FILE="nginx-${NGINX_VERSION}-vr.tar.gz"
 PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.tar.gz"
 PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.tar.gz"
 MEMCACHED_FILE="memcached-server-${MEMCACHED_VERSION}-vr.tar.gz"

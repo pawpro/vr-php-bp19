@@ -205,6 +205,7 @@ if [[ -n "$NEWRELIC_VERSION" ]]; then
     curl -L "https://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
     pushd newrelic-php5-${NEWRELIC_VERSION}-linux
     cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
+    mkdir -p /app/local/{bin,etc} /app/local/var/{run,log} /app/local/var/log/newrelic
     popd
 else
     echo "- Skipping NewRelic"

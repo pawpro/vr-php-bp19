@@ -1,0 +1,84 @@
+#!/bin/bash
+
+## EDIT
+export S3_BUCKET="yg-php-buildpack-opi"
+export OPENSSL_VERSION="0_9_8"
+export NGINX_VERSION="1.6.0"
+export PCRE_VERSION="8.35"
+## END EDIT
+
+set -e
+set -o pipefail
+
+orig_dir=$( pwd )
+
+echo "+ Updating apt-get sources..."
+apt-get -y update
+
+echo "+ Installing build dependencies..."
+# install build deps
+apt-get -y install g++ \
+gcc \
+curl \
+autoconf 
+
+rm -rf /app
+rm -rf /root/build
+mkdir -p build
+pushd build
+
+if [[ -n "$NGINX_VERSION" ]]; then
+    echo "+ Fetching Nginx ..."
+    mkdir -p /app/local
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/nginx-${NGINX_VERSION}.tar.gz" -o - | tar xz
+else
+    echo "- Skipping Nginx"
+fi
+
+if [[ -n "$PCRE_VERSION" ]]; then
+    echo "+ Fetching PCRE..."
+    pushd nginx-$NGINX_VERSION/contrib
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/pcre-${PCRE_VERSION}.tar.gz" -o - | tar xz
+    popd
+else
+    echo "- Skipping PCRE"
+fi
+
+if [[ -n "$OPENSSL_VERSION" ]]; then
+    echo "+ Fetching openssl sources..."
+    mkdir -p /app/local
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/openssl_${OPENSSL_VERSION}.tar.gz" -o - | tar xz
+    pushd openssl_${OPENSSL_VERSION}
+    ./config --prefix=/app/local --openssldir=/app/local/openssl shared no-threads
+    make
+    make install
+    popd
+else
+    echo "- Skipping openssl"
+fi
+
+if [[ -n "$NGINX_VERSION" ]]; then
+    echo "+ Building Nginx ..."
+    pushd nginx-$NGINX_VERSION
+    ./configure --prefix=/app/vendor/nginx \
+    --with-pcre=contrib/pcre-${PCRE_VERSION} \
+    --with-http_gzip_static_module \
+    --with-http_stub_status_module \
+    --with-http_ssl_module
+    make install
+    popd
+fi
+
+echo "+ Packaging NGINX..."
+pushd /app/vendor/nginx
+tar czf $orig_dir/nginx-${NGINX_VERSION}-vr.tar.gz *
+popd
+
+pushd /app/local
+tar czf $orig_dir/nginx-${NGINX_VERSION}-libs-vr.tar.gz *
+popd
+
+popd
+
+echo "+ Binaries are packaged in $orig_dir/*.tar.gz. Upload to s3 bucket of your choice."
+echo "+ Done!"

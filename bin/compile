@@ -9,7 +9,7 @@ APP_NAME="opifront-vr-UK"
 
 S3_BUCKET=yg-php-buildpack-opi
 S3_URL="https://s3.amazonaws.com/${S3_BUCKET}"
-NGINX_VERSION=1.4.1
+NGINX_VERSION=1.6.0
 PHP_VERSION=5.5.15
 NEWRELIC_VERSION=4.10.1.62
 MEMCACHED_VERSION=1.4.20
@@ -273,9 +273,10 @@ mkdir -p client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp applicati
 if [ "\${NEW_RELIC_LICENSE_KEY}" ]; then
 	/app/local/bin/newrelic-daemon -c /app/local/etc/newrelic.cfg -d error
 fi
+
+/app/vendor/memcached/bin/memcached -u nobody -d -p 11211 -U 112211 -m 64
 /app/vendor/php/sbin/php-fpm
 /app/vendor/nginx/sbin/nginx
-/app/vendor/memcached/bin/memcached -u nobody -d -p 11211 -U 112211 -m 64
 EOF
 chmod +x boot.sh
 

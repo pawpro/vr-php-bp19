@@ -167,7 +167,8 @@ export PATH="${PATH}:${BUILD_DIR}/vendor/memcached/bin"
 echo "-----> Installing newrelic"
 if [ -f "${NEWRELIC_FILE}" ]
 then
-	sed -i "s/__APPNAME__/${APP_NAME}/g" ${BUILD_DIR}/vendor/php/conf/etc.d/05_newrelic.ini
+	sed -i "s/__APPNAME__/${APP_NAME}/g" $LP_DIR/conf/etc.d/05_newrelic.ini
+    mkdir -p /app/local/var/log/newrelic
 fi
 
 # Composer Installation

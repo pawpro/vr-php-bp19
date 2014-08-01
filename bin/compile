@@ -5,7 +5,6 @@ set -e
 set -o pipefail
 
 # START CONFIG
-APP_NAME="opifront-vr-UK"
 S3_BUCKET=yg-php-buildpack-opi
 S3_URL="https://s3.amazonaws.com/${S3_BUCKET}"
 NGINX_VERSION=1.6.0
@@ -200,7 +199,8 @@ cp -n ${LP_DIR}/.profile.d/* ${BUILD_DIR}/.profile.d/
 echo "-----> Installing newrelic"
 if [ -f "${NEWRELIC_FILE}" ]
 then
-	sed -i "s/__APPNAME__/${APP_NAME}/g" ${BUILD_DIR}/vendor/php/etc.d/05_newrelic.ini
+	sed -i "s/__APPNAME__/${NEW_RELIC_APPNAME}/g" ${BUILD_DIR}/vendor/php/etc.d/05_newrelic.ini
+	sed -i "s/__LICENSE__/${NEW_RELIC_LICENSE_KEY}/g" ${BUILD_DIR}/vendor/php/etc.d/05_newrelic.ini
 fi
 
 echo "-----> Installing boot script"
@@ -247,11 +247,6 @@ if [ -d /app/conf/nginx.d ]; then
 	done
 fi
 
-# Set NEWRELIC key
-if [ -x "/app/local/bin/newrelic-license" ]; then
-	/app/local/bin/newrelic-license
-fi
-
 # Preserve current php-fpm.conf so that env list does
 # not go out of hand across restarts.
 if [ -r /app/vendor/php/etc/php-fpm.conf.current ]; then
@@ -269,10 +264,6 @@ mkdir -p /app/local/var/log/newrelic
 touch /app/vendor/nginx/logs/access.log /app/vendor/nginx/logs/error.log /app/vendor/php/var/log/php-fpm.log /app/vendor/php/var/log/application.log /app/vendor/php/var/log/php-errors.log /app/local/var/log/newrelic/newrelic-daemon.log /app/local/var/log/newrelic/php_agent.log
 mkdir -p client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp application/cache
 (tail -f -n 0 /app/vendor/nginx/logs/*.log /app/vendor/php/var/log/*.log /app/local/var/log/newrelic/*.log &)
-
-if [ "\${NEW_RELIC_LICENSE_KEY}" ]; then
-	/app/local/bin/newrelic-daemon -c /app/local/etc/newrelic.cfg -d error
-fi
 
 /app/vendor/memcached/bin/memcached -u nobody -d -p 11211 -U 112211 -m 64
 /app/vendor/php/sbin/php-fpm

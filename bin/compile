@@ -261,8 +261,9 @@ for var in \`env | cut -f1 -d=\`; do
 done
 
 mkdir -p /app/local/var/log/newrelic
+mkdir -p client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp /app/php/opigram/application/logs/ /app/php/admin/application/logs/
 touch /app/vendor/nginx/logs/access.log /app/vendor/nginx/logs/error.log /app/vendor/php/var/log/php-fpm.log /app/vendor/php/var/log/application.log /app/vendor/php/var/log/php-errors.log /app/local/var/log/newrelic/newrelic-daemon.log /app/local/var/log/newrelic/php_agent.log
-mkdir -p client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp
+touch /app/php/opigram/application/logs/application.log /app/php/admin/application/logs/application.log
 (tail -f -n 0 /app/vendor/nginx/logs/*.log /app/vendor/php/var/log/*.log /app/local/var/log/newrelic/*.log /app/php/*/application/logs/*.log &)
 
 /app/vendor/memcached/bin/memcached -u nobody -d -p 11211 -U 112211 -m 64

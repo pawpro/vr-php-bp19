@@ -427,7 +427,7 @@ for include in $PHP_INCLUDES; do
 done
 
 install_node_deps "$BUILD_DIR"
-install_composer_deps "$BUILD_DIR"
+#install_composer_deps "$BUILD_DIR"
 
 if [ -n "$COMPILE_CMD" ]; then
     status "Running compile commands"

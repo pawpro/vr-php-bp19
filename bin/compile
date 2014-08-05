@@ -366,7 +366,7 @@ then
 		echo "Using cached PHP LIBS v${PHP_VERSION}" | indent
 	fi
 else
-	echo "Bundling PHP v${PHP_VERSION}" | indent
+	echo "Bundling PHP LIBS v${PHP_VERSION}" | indent
 	echo ${PHP_LIBS_URL} | indent
 	download_url ${PHP_LIBS_URL}
 fi
@@ -384,10 +384,10 @@ then
 		echo ${MEMCACHED_URL} | indent
 		download_url ${MEMCACHED_URL}
 	else
-		echo "Using cached PHP v${MEMCACHED_VERSION}" | indent
+		echo "Using cached Memcached v${MEMCACHED_VERSION}" | indent
 	fi
 else
-	echo "Bundling PHP v${MEMCACHED_VERSION}" | indent
+	echo "Bundling Memcached v${MEMCACHED_VERSION}" | indent
 	echo ${MEMCACHED_URL} | indent
 	download_url ${MEMCACHED_URL}
 fi
@@ -413,9 +413,10 @@ if [ -f "$BUILD_DIR/composer.json" ] && package_newrelic_enabled; then
 	 cp -f "$basedir/../conf/php/newrelic.ini" "/app/vendor/php/etc/conf.d/newrelic.ini"
 fi
 
-
-
 mkdir -p "conf"
+ls -al "$basedir/../conf"
+ls -al "/app/vendor/php"
+
 cp "$basedir/../conf/nginx/base.conf.erb" "conf/nginx.conf.erb"
 cp "$basedir/../conf/php/php-fpm.conf" "/app/vendor/php/etc/php-fpm.conf"
 cp "$basedir/../conf/php/php.ini" "/app/vendor/php/etc/php.ini"

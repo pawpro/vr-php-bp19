@@ -240,10 +240,10 @@ function download_url() {
 
 export_env_dir "$3"
 
-
+mkdir -p "$HOME/bin/"
 # Download jq binary for JSON processing
 export PATH="$HOME/bin:$PATH"
-curl "http://${S3_BUCKET}.s3.amazonaws.com/bin/jq" -L -s -o - > "$HOME/bin/jq"
+curl "${S3_BUCKET}.s3.amazonaws.com/bin/jq" -L -s -o - > "$HOME/bin/jq"
 chmod +x "$HOME/bin/jq"
 
 
@@ -296,8 +296,6 @@ fi
 #################### INSTALL STUFF
 
 mkdir -p $BUILD_DIR $CACHE_DIR ${BUNDLE_DIR} ${BUILD_DIR}/local ${BUILD_DIR}/vendor/bin ${COMPOSER_HOME} ${BUILD_DIR}/.profile.d
-
-pushd ${BUNDLE_DIR} > /dev/null
 
 if [ -n "`find . -type f -atime +30`" ]
 then
@@ -414,6 +412,9 @@ source ".profile.d/php.sh"
 if [ -f "$BUILD_DIR/composer.json" ] && package_newrelic_enabled; then
 	 cp -f "$basedir/../conf/php/newrelic.ini" "/app/vendor/php/etc/conf.d/newrelic.ini"
 fi
+
+#FIX
+mkdir -p "/app/vendor/php/etc/php-fpm.conf"
 
 mkdir -p "conf"
 cp "$basedir/../conf/nginx/base.conf.erb" "conf/nginx.conf.erb"

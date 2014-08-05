@@ -240,7 +240,7 @@ function download_url() {
 
 export_env_dir "$3"
 
-mkdir -p "$HOME/bin/"
+[ ! -d "$HOME/bin" ] && mkdir -p "$HOME/bin"
 # Download jq binary for JSON processing
 export PATH="$HOME/bin:$PATH"
 curl "${S3_BUCKET}.s3.amazonaws.com/bin/jq" -L -s -o - > "$HOME/bin/jq"
@@ -278,7 +278,6 @@ MEMCACHED_URL="${REPO_URL}/${MEMCACHED_FILE}"
 COMPOSER_URL="http://getcomposer.org/composer.phar"
 
 
-
 # Read config variables from composer.json if it exists
 if [ -f "$BUILD_DIR/composer.json" ]; then
     DOCUMENT_ROOT=$(package_document_root)
@@ -291,7 +290,6 @@ if [ -f "$BUILD_DIR/composer.json" ]; then
 fi
 
 [ ! -d "$BUILD_DIR/vendor" ] && mkdir -p "$BUILD_DIR/vendor"
-
 
 #################### INSTALL STUFF
 
@@ -327,8 +325,8 @@ else
 	download_url ${NGINX_URL}
 fi
 
-mkdir -p ${BUILD_DIR}/vendor/nginx
-tar xzf ${NGINX_FILE} -C ${BUILD_DIR}/vendor/nginx
+mkdir -p /app/vendor/nginx
+tar xzf ${NGINX_FILE} -C /app/vendor/nginx
 
 # PHP
 echo "-----> Installing PHP"
@@ -348,10 +346,10 @@ else
 	download_url ${PHP_URL}
 fi
 
-mkdir -p ${BUILD_DIR}/vendor/php/etc
-tar xzf ${PHP_FILE} -C ${BUILD_DIR}/vendor/php
-export PATH="${PATH}:${BUILD_DIR}/vendor/php/bin"
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${BUILD_DIR}/local/lib"
+mkdir -p /app/vendor/php/etc
+tar xzf ${PHP_FILE} -C /app/vendor/php
+export PATH="${PATH}:/app/vendor/php/bin"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/app/local/lib"
 
 # PHP LIBS
 echo "-----> Installing PHP LIBS"
@@ -371,8 +369,8 @@ else
 	download_url ${PHP_LIBS_URL}
 fi
 
-mkdir -p ${BUILD_DIR}/local
-tar xzf ${PHP_LIBS_FILE} -C ${BUILD_DIR}/local
+mkdir -p /app/local
+tar xzf ${PHP_LIBS_FILE} -C /app/local
 
 
 echo "-----> Installing Memcached"
@@ -392,9 +390,9 @@ else
 	download_url ${MEMCACHED_URL}
 fi
 
-mkdir -p ${BUILD_DIR}/vendor/memcached
-tar xzf ${MEMCACHED_FILE} -C ${BUILD_DIR}/vendor/memcached
-export PATH="${PATH}:${BUILD_DIR}/vendor/memcached/bin"
+mkdir -p /app/vendor/memcached
+tar xzf ${MEMCACHED_FILE} -C /app/vendor/memcached
+export PATH="${PATH}:/app/vendor/memcached/bin"
 
 
 #######################################

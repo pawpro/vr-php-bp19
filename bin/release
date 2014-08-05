@@ -1,11 +1,10 @@
-#!/usr/bin/env bash
-# bin/release <build-dir>
+#!/bin/bash
 
-cat <<EOF
+cat << EOF
 ---
+addons:
 config_vars:
-  PATH: /app/vendor/bin:/app/local/bin:/app/vendor/nginx/sbin:/app/vendor/php/bin:/app/vendor/memcached/bin:/app/vendor/php/sbin:/usr/local/bin:/usr/bin:/bin
+  PATH: /app/bin:/app/vendor/nginx/sbin:/app/vendor/php/bin:/app/vendor/php/sbin:/usr/local/bin:/usr/bin:/bin
 default_process_types:
-  web: sh boot.sh
+  web: bin/run
 EOF
-

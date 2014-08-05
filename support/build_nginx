@@ -1,11 +1,6 @@
 #!/bin/bash
 
-## EDIT
-export S3_BUCKET="yg-php-buildpack-opi"
-export OPENSSL_VERSION="0_9_8"
-export NGINX_VERSION="1.6.0"
-export PCRE_VERSION="8.35"
-## END EDIT
+./set-env.sh
 
 set -e
 set -o pipefail

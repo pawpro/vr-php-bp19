@@ -1,15 +1,11 @@
 #!/bin/bash
 
+./set-env.sh
+
 set -e
 set -o pipefail
 
-## EDIT
-export S3_BUCKET="yg-php-buildpack-opi"
-export MEMCACHED_VERSION="1.4.20"
-## END EDIT
-
 orig_dir=$( pwd )
-rm -rf build
 mkdir -p build
 pushd build
 

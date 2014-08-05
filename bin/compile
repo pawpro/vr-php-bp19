@@ -412,13 +412,13 @@ mkdir -p "conf"
 cp "$basedir/../conf/nginx/base.conf.erb" "${BUILD_DIR}/conf/nginx.conf.erb"
 cp "$basedir/../conf/nginx/site.conf.erb" "${BUILD_DIR}/conf/site.conf.erb"
 cp "$basedir/../conf/php/php-fpm.conf" "${BUILD_DIR}/vendor/php/etc/php-fpm.conf"
-cp "$basedir/../conf/php/php.ini" "${BUILD_DIR}/vendor/php/etc/php.ini"
+cp "$basedir/../conf/php/php.ini" "${BUILD_DIR}/vendor/php/php.ini"
 cp -f "$basedir/../conf/php/newrelic.ini" "${BUILD_DIR}/vendor/php/etc/conf.d/newrelic.ini"
 
 #pear config-set php_ini /app/vendor/php/etc/php.ini &> /dev/null
 
 for conf in $PHP_EXTRA_CONFIG; do
-    echo "$conf" >> "${BUILD_DIR}/vendor/php/etc/php.ini"
+    echo "$conf" >> "${BUILD_DIR}/vendor/php/php.ini"
 done
 
 for include in $PHP_INCLUDES; do

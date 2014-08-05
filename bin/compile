@@ -346,7 +346,7 @@ else
 	download_url ${PHP_URL}
 fi
 
-mkdir -p ${BUILD_DIR}/vendor/php/etc
+mkdir -p ${BUILD_DIR}/vendor/php/etc/conf.d
 tar xzf ${PHP_FILE} -C ${BUILD_DIR}/vendor/php
 export PATH="${PATH}:/app/vendor/php/bin"
 export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/app/local/lib"

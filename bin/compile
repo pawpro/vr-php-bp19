@@ -325,8 +325,8 @@ else
 	download_url ${NGINX_URL}
 fi
 
-mkdir -p /app/vendor/nginx
-tar xzf ${NGINX_FILE} -C /app/vendor/nginx
+mkdir -p ${BUILD_DIR}/vendor/nginx
+tar xzf ${NGINX_FILE} -C ${BUILD_DIR}/vendor/nginx
 
 # PHP
 echo "-----> Installing PHP"
@@ -346,10 +346,10 @@ else
 	download_url ${PHP_URL}
 fi
 
-mkdir -p /app/vendor/php/etc
-tar xzf ${PHP_FILE} -C /app/vendor/php
-export PATH="${PATH}:/app/vendor/php/bin"
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/app/local/lib"
+mkdir -p ${BUILD_DIR}/vendor/php/etc
+tar xzf ${PHP_FILE} -C ${BUILD_DIR}/vendor/php
+export PATH="${PATH}:${BUILD_DIR}/vendor/php/bin"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${BUILD_DIR}/local/lib"
 
 # PHP LIBS
 echo "-----> Installing PHP LIBS"
@@ -369,8 +369,8 @@ else
 	download_url ${PHP_LIBS_URL}
 fi
 
-mkdir -p /app/local
-tar xzf ${PHP_LIBS_FILE} -C /app/local
+mkdir -p ${BUILD_DIR}/local
+tar xzf ${PHP_LIBS_FILE} -C ${BUILD_DIR}/local
 
 
 echo "-----> Installing Memcached"
@@ -390,9 +390,9 @@ else
 	download_url ${MEMCACHED_URL}
 fi
 
-mkdir -p /app/vendor/memcached
-tar xzf ${MEMCACHED_FILE} -C /app/vendor/memcached
-export PATH="${PATH}:/app/vendor/memcached/bin"
+mkdir -p ${BUILD_DIR}/vendor/memcached
+tar xzf ${MEMCACHED_FILE} -C ${BUILD_DIR}/vendor/memcached
+export PATH="${PATH}:${BUILD_DIR}/vendor/memcached/bin"
 
 
 #######################################
@@ -408,22 +408,22 @@ SH
 source ".profile.d/php.sh"
 
 if [ -f "$BUILD_DIR/composer.json" ] && package_newrelic_enabled; then
-	 cp -f "$basedir/../conf/php/newrelic.ini" "/app/vendor/php/etc/conf.d/newrelic.ini"
+	 cp -f "$basedir/../conf/php/newrelic.ini" "${BUILD_DIR}/vendor/php/etc/conf.d/newrelic.ini"
 fi
 
 mkdir -p "conf"
-cp "$basedir/../conf/nginx/base.conf.erb" "conf/nginx.conf.erb"
-cp "$basedir/../conf/php/php-fpm.conf" "/app/vendor/php/etc/php-fpm.conf"
-cp "$basedir/../conf/php/php.ini" "/app/vendor/php/etc/php.ini"
+cp "$basedir/../conf/nginx/base.conf.erb" "${BUILD_DIR}/vendor/nginx/conf/nginx.conf.erb"
+cp "$basedir/../conf/php/php-fpm.conf" "${BUILD_DIR}/vendor/php/etc/php-fpm.conf"
+cp "$basedir/../conf/php/php.ini" "${BUILD_DIR}/vendor/php/etc/php.ini"
 
 #pear config-set php_ini /app/vendor/php/etc/php.ini &> /dev/null
 
 for conf in $PHP_EXTRA_CONFIG; do
-    echo "$conf" >> "/app/vendor/php/etc/php.ini"
+    echo "$conf" >> "${BUILD_DIR}/vendor/php/etc/php.ini"
 done
 
 for include in $PHP_INCLUDES; do
-    cp "$BUILD_DIR/$include" "/app/vendor/php/etc/conf.d/"
+    cp "$BUILD_DIR/$include" "${BUILD_DIR}/vendor/php/etc/conf.d/"
 done
 
 install_node_deps "$BUILD_DIR"

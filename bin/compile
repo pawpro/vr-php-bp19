@@ -472,6 +472,11 @@ erb conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
     \$pmsgr < "nginx"
 )&
 
+(
+    exec memcached -u nobody -d -p 11211 -U 112211 -m 64
+    \$pmsgr < "memcached"
+)&
+
 
 read exitproc <\$pmsgr
 echo "Boot failed: \$exitproc"

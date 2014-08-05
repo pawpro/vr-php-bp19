@@ -348,8 +348,8 @@ fi
 
 mkdir -p ${BUILD_DIR}/vendor/php/etc
 tar xzf ${PHP_FILE} -C ${BUILD_DIR}/vendor/php
-export PATH="${PATH}:${BUILD_DIR}/vendor/php/bin"
-export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${BUILD_DIR}/local/lib"
+export PATH="${PATH}:/app/vendor/php/bin"
+export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:/app/local/lib"
 
 # PHP LIBS
 echo "-----> Installing PHP LIBS"
@@ -392,7 +392,7 @@ fi
 
 mkdir -p ${BUILD_DIR}/vendor/memcached
 tar xzf ${MEMCACHED_FILE} -C ${BUILD_DIR}/vendor/memcached
-export PATH="${PATH}:${BUILD_DIR}/vendor/memcached/bin"
+export PATH="${PATH}:/app/vendor/memcached/bin"
 
 
 #######################################

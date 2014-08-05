@@ -408,7 +408,7 @@ SH
 source ".profile.d/php.sh"
 
 mkdir -p "conf"
-cp "$basedir/../conf/nginx/base.conf.erb" "${BUILD_DIR}/../conf/nginx.conf.erb"
+cp "$basedir/../conf/nginx/base.conf.erb" "${BUILD_DIR}/conf/nginx.conf.erb"
 cp "$basedir/../conf/php/php-fpm.conf" "${BUILD_DIR}/vendor/php/etc/php-fpm.conf"
 cp "$basedir/../conf/php/php.ini" "${BUILD_DIR}/vendor/php/etc/php.ini"
 cp -f "$basedir/../conf/php/newrelic.ini" "${BUILD_DIR}/vendor/php/etc/conf.d/newrelic.ini"
@@ -456,8 +456,8 @@ if [ -n "\$NEW_RELIC_LICENSE_KEY" ]; then
     echo "newrelic.appname=\"\$NEW_RELIC_APPNAME\"" >> /app/vendor/php/etc/conf.d/newrelic.ini
 fi
 
-erb conf/nginx.conf.erb > /app/vendor/nginx/conf/nginx.conf
-erb conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
+erb /app/conf/nginx.conf.erb > /app/vendor/nginx/conf/nginx.conf
+erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
 
 `init_log_plex_fifo ${LOG_FILES}`
 `tail_log_plex ${LOG_FILES} ${SYS_LOG_FILES}`

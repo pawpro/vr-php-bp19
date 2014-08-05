@@ -409,6 +409,7 @@ source ".profile.d/php.sh"
 
 mkdir -p "conf"
 cp "$basedir/../conf/nginx/base.conf.erb" "${BUILD_DIR}/conf/nginx.conf.erb"
+cp "$basedir/../conf/nginx/site.conf.erb" "${BUILD_DIR}/conf/site.conf.erb"
 cp "$basedir/../conf/php/php-fpm.conf" "${BUILD_DIR}/vendor/php/etc/php-fpm.conf"
 cp "$basedir/../conf/php/php.ini" "${BUILD_DIR}/vendor/php/etc/php.ini"
 cp -f "$basedir/../conf/php/newrelic.ini" "${BUILD_DIR}/vendor/php/etc/conf.d/newrelic.ini"

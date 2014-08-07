@@ -296,7 +296,7 @@ fi
 
 #################### INSTALL STUFF
 
-mkdir -p $BUILD_DIR $CACHE_DIR ${BUNDLE_DIR} ${BUILD_DIR}/local ${BUILD_DIR}/vendor/bin ${COMPOSER_HOME} ${BUILD_DIR}/.profile.d
+mkdir -p $BUILD_DIR $CACHE_DIR ${BUNDLE_DIR} ${BUILD_DIR}/local ${COMPOSER_HOME} ${BUILD_DIR}/.profile.d
 
 pushd ${BUNDLE_DIR} > /dev/null
 

@@ -37,6 +37,10 @@ location /opi {
     rewrite ^/opi(/.*)$ $1;
 }
 
+location /opi/kohana {
+    rewrite ^/opi/kohana(/.*)$ $1;
+}
+
 location / {
     rewrite ^/(.*) /index.php;
 }

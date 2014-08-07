@@ -207,6 +207,10 @@ function package_compile_cmd() {
     jq --raw-output '.extra.heroku["compile"] // [] | .[]' < "$BUILD_DIR/composer.json"
 }
 
+function package_boot_cmd() {
+    jq --raw-output '.extra.heroku["boot"] // [] | .[]' < "$BUILD_DIR/composer.json"
+}
+
 function package_newrelic_enabled() {
     local val=$(jq --raw-output '.extra.heroku["newrelic"] // false' < "$BUILD_DIR/composer.json")
 
@@ -263,6 +267,7 @@ INDEX_DOCUMENT="index.php"
 PHP_EXTRA_CONFIG=
 PHP_INCLUDES=
 COMPILE_CMD=
+BOOT_CMD=
 NGINX_INCLUDES=
 LOG_FILES=( "/app/vendor/nginx/logs/access.log" "/app/vendor/nginx/logs/error.log" "/app/vendor/php/var/log/error.log" )
 # END CONFIG
@@ -288,6 +293,7 @@ if [ -f "$BUILD_DIR/composer.json" ]; then
     PHP_EXTRA_CONFIG=$(package_php_config)
     PHP_INCLUDES=$(package_php_includes)
     COMPILE_CMD=$(package_compile_cmd)
+    BOOT_CMD=$(package_boot_cmd)
     NGINX_INCLUDES=$(package_nginx_includes)
     USER_LOG_FILES=$(package_log_files)
 fi
@@ -441,6 +447,13 @@ if [ -n "$COMPILE_CMD" ]; then
     done <<< "$COMPILE_CMD"
 fi
 
+if [ -n "$BOOT_CMD" ]; then
+    status "Preparing run commands"
+    while read -r cmd; do
+        $BOOT_CMDS="$BOOT_CMDS\n$cmd"
+    done <<< "$BOOT_CMD"
+fi
+
 mkdir -p "bin"
 
 cat > bin/run <<SH
@@ -457,6 +470,8 @@ done
 export DOCUMENT_ROOT="$DOCUMENT_ROOT"
 export INDEX_DOCUMENT="$INDEX_DOCUMENT"
 export NGINX_INCLUDES="$NGINX_INCLUDES"
+
+\$BOOT_CMDS
 
 if [ -n "\$NEW_RELIC_LICENSE_KEY" ]; then
     echo "newrelic.license=\"\$NEW_RELIC_LICENSE_KEY\"" >> /app/vendor/php/etc/conf.d/newrelic.ini

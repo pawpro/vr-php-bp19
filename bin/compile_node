@@ -7,10 +7,10 @@ set -o pipefail   # don't ignore exit codes when piping output
 # Configure directories
 build_dir=$1
 cache_basedir=$2
-bp_dir=$(cd $(dirname $0); cd ..; pwd)
+basedir="$( cd -P "$( dirname "$0" )" && pwd )"
 
 # Load some convenience functions like status() echo(), indent()
-source $bp_dir/bin/common.sh
+source $basedir/common.sh
 
 # Output npm debug info on error
 trap cat_npm_debug_log ERR
@@ -43,11 +43,12 @@ fi
 # Download node from Heroku's S3 mirror of nodejs.org/dist
 status "Downloading and installing node"
 node_url="http://s3pository.heroku.com/node/v$node_version/node-v$node_version-linux-x64.tar.gz"
-curl $node_url -s -o - | tar xzf - -C $build_dir
+mkdir -p $build_dir/vendor/node
+curl $node_url -s -o - | tar xzf - -C $build_dir/vendor/node --strip 1
 
-# Move node into ./vendor and make it executable
-mkdir -p $build_dir/vendor
-mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
+# # Move node into ./vendor and make it executable
+# mkdir -p $build_dir/vendor/node
+# mv $build_dir/node-v$node_version-linux-x64 $build_dir/vendor/node
 chmod +x $build_dir/vendor/node/bin/*
 PATH=$PATH:$build_dir/vendor/node/bin
 

@@ -450,7 +450,7 @@ fi
 if [ -n "$BOOT_CMD" ]; then
     status "Preparing run commands"
     while read -r cmd; do
-        $BOOT_CMDS="$BOOT_CMDS; $cmd" 
+        BOOT_CMDS="$BOOT_CMDS; $cmd" 
     done <<< "$BOOT_CMD"
 fi
 

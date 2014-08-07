@@ -238,6 +238,9 @@ function download_url() {
   curl -s -S -O -L -m 300 --connect-timeout 60 "$TARGET_URL"
 }
 
+BUNDLE_DIR="${CACHE_DIR}/bundles"
+export COMPOSER_HOME="${CACHE_DIR}/.composer"
+
 export_env_dir "$3"
 
 [ ! -d "$HOME/bin" ] && mkdir -p "$HOME/bin"

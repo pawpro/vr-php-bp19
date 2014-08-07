@@ -38,7 +38,7 @@ init_log_plex_fifo() {
     echo "mkdir -p `dirname ${log_file}`"
   done
   for log_file in $*; do
-    echo "rm -rf mkfifo ${log_file} && mkfifo ${log_file}"
+    echo "rm -rf ${log_file} && mkfifo ${log_file}"
   done
 }
 
@@ -47,7 +47,7 @@ init_log_plex() {
     echo "mkdir -p `dirname ${log_file}`"
   done
   for log_file in $*; do
-    echo "touch ${log_file}"
+    echo "> ${log_file}"
   done
 }
 

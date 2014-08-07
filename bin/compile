@@ -450,8 +450,7 @@ fi
 if [ -n "$BOOT_CMD" ]; then
     status "Preparing run commands"
     while read -r cmd; do
-        $BOOT_CMDS="$BOOT_CMDS
-$cmd" 
+        $BOOT_CMDS="$BOOT_CMDS; $cmd" 
     done <<< "$BOOT_CMD"
 fi
 
@@ -472,7 +471,7 @@ export DOCUMENT_ROOT="$DOCUMENT_ROOT"
 export INDEX_DOCUMENT="$INDEX_DOCUMENT"
 export NGINX_INCLUDES="$NGINX_INCLUDES"
 
-\$BOOT_CMDS
+$BOOT_CMDS
 
 if [ -n "\$NEW_RELIC_LICENSE_KEY" ]; then
     echo "newrelic.license=\"\$NEW_RELIC_LICENSE_KEY\"" >> /app/vendor/php/etc/conf.d/newrelic.ini

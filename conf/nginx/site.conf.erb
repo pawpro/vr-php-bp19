@@ -1,11 +1,6 @@
 # Default configuration for non-framework apps
 root /app/<%= ENV['DOCUMENT_ROOT'] %>;
 
-map $http_x_forwarded_proto $my_https {
-    default off;
-    https on;
-}
-
 location = /favicon.ico {
     empty_gif;
 }

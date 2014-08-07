@@ -438,7 +438,7 @@ fi
 
 mkdir -p "bin"
 
-cat > "bin/run" <<SH
+cat > bin/run <<SH
 #!/usr/bin/env bash
 
 pmsgr=/tmp/pmsgr

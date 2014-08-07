@@ -1,6 +1,11 @@
 # Default configuration for non-framework apps
 root /app/<%= ENV['DOCUMENT_ROOT'] %>;
 
+map $http_x_forwarded_proto $my_https {
+    default off;
+    https on;
+}
+
 location = /favicon.ico {
     empty_gif;
 }
@@ -14,7 +19,7 @@ location ~ ^/opi/(images|js|css)/ {
 }
 
 location ~ ^/opi/scheduled {
-    allow localhost;
+    allow 127.0.0.1;
     deny all;
 }
 
@@ -26,7 +31,7 @@ location ~ ^/(images|js|css)/ {
 }
 
 location /server-status {
-    allow localhost;
+    allow 127.0.0.1;
     deny all;
     
     stub_status on;
@@ -42,9 +47,10 @@ location / {
 }
 
 location = /index.php {
-    fastcgi_param   SCRIPT_FILENAME $document_root$fastcgi_script_name;
     include fastcgi_params;
+    fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
     fastcgi_param   HTTPS $my_https if_not_empty;
     fastcgi_param   HTTP_X_FORWARDED_PROTO "https";
-    fastcgi_pass    php_fpm;
+    fastcgi_buffers 256 4k;
+    fastcgi_pass php;
 }

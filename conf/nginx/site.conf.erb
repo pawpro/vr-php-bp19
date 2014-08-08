@@ -38,7 +38,7 @@ location /opi {
 }
 
 location /opi/kohana {
-    rewrite ^/opi/kohana(/.*)$ $1;
+    rewrite ^/opi/kohana/(.*)$ /opi/$1;
 }
 
 location / {

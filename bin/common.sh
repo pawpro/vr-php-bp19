@@ -42,17 +42,9 @@ init_log_plex_fifo() {
   done
 }
 
-init_log_plex() {
-  for log_file in $*; do
-    echo "mkdir -p `dirname ${log_file}`"
-  done
-  for log_file in $*; do
-    echo "> ${log_file}"
-  done
-}
-
 tail_log_plex() {
   for log_file in $*; do
+    echo "mkdir -p `dirname ${log_file}` && > ${log_file}"
     echo "tail -n 0 -qF --pid=\$\$ ${log_file} &"
   done
 }

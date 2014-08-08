@@ -1,3 +1,5 @@
+rewrite_log on;
+
 # Default configuration for non-framework apps
 root /app/<%= ENV['DOCUMENT_ROOT'] %>;
 
@@ -5,17 +7,24 @@ location = /favicon.ico {
     empty_gif;
 }
 
-location ~* ^/opi/js/[a-z_\-]+.[0-9a-f]+.min {
-    rewrite ^/opi/js/([a-z_\-]+)\.[0-9a-f]+.min.js /opi/js/$1.min.js;
+location ^~ /opi/ {
+    rewrite ^/opi/kohana(/.*)$ /opi$1;
+    rewrite ^/opi(/.*)$ $1;
 }
 
-location ~ ^/opi/(images|js|css)/ {
-    rewrite ^/opi/(.*) /$1;
-}
+location ~ ^/images/(frontpagestories|thumbnails) {
+    expires         max;
+    add_header      Pragma public;
+    add_header      Cache-Control "public, must-revalidate, proxy-revalidate";
+    #log_not_found off;
 
-location ~ ^/opi/scheduled {
-    allow 127.0.0.1;
-    deny all;
+
+    include fastcgi_params;
+    fastcgi_param  REQUEST_URI /timthumb.php?&src=$uri&w=$arg_w;
+    fastcgi_param  SCRIPT_FILENAME    $document_root/timthumb.php;
+    fastcgi_param   HTTP_X_FORWARDED_PROTO "http";
+    fastcgi_buffers 256 4k;
+    fastcgi_pass php;
 }
 
 location ~ ^/(images|js|css)/ {
@@ -23,6 +32,13 @@ location ~ ^/(images|js|css)/ {
     add_header      Pragma public;
     add_header      Cache-Control "public, must-revalidate, proxy-revalidate";
     log_not_found off;
+
+    try_files $uri =404;
+}
+
+location ~ ^/opi/scheduled {
+    allow 127.0.0.1;
+    deny all;
 }
 
 location /server-status {
@@ -33,22 +49,20 @@ location /server-status {
     access_log   off;
 }
 
-location /opi {
-    rewrite ^/opi(/.*)$ $1;
-}
-
-location /opi/kohana {
-    rewrite ^/opi/kohana/(.*)$ /opi/$1;
-}
-
 location / {
-    rewrite ^/(.*) /index.php;
+    include fastcgi_params;
+    fastcgi_param  REQUEST_URI $uri?$args;
+    fastcgi_param  SCRIPT_FILENAME    $document_root/index.php;
+    #fastcgi_param   HTTPS $my_https if_not_empty;
+    fastcgi_param   HTTP_X_FORWARDED_PROTO "http";
+    fastcgi_buffers 256 4k;
+    fastcgi_pass php;
 }
 
-location = /index.php {
+location = /timthumb.php {
     include fastcgi_params;
-    fastcgi_param  SCRIPT_FILENAME    $document_root$fastcgi_script_name;
-    #fastcgi_param   HTTPS $my_https if_not_empty;
+    fastcgi_param  REQUEST_URI $uri?$args;
+    fastcgi_param  SCRIPT_FILENAME    $document_root/timthumb.php;
     fastcgi_param   HTTP_X_FORWARDED_PROTO "http";
     fastcgi_buffers 256 4k;
     fastcgi_pass php;

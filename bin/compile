@@ -481,7 +481,6 @@ fi
 erb /app/conf/nginx.conf.erb > /app/vendor/nginx/conf/nginx.conf
 erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
 
-`init_log_plex ${LOG_FILES}`
 `tail_log_plex ${LOG_FILES} ${SYS_LOG_FILES}`
 
 (

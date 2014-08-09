@@ -484,17 +484,17 @@ erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
 `tail_log_plex ${LOG_FILES} ${SYS_LOG_FILES}`
 
 (
-    exec php-fpm -p "/app/vendor/php"
+    exec /app/vendor/php/sbin/php-fpm -p "/app/vendor/php"
     \$pmsgr < "php-fpm"
 )&
 
 (
-    exec nginx -p "/app/vendor/nginx" -c /app/vendor/nginx/conf/nginx.conf
+    exec /app/vendor/nginx/sbin/nginx -p "/app/vendor/nginx" -c /app/vendor/nginx/conf/nginx.conf
     \$pmsgr < "nginx"
 )&
 
 (
-    exec memcached -u nobody -d -p 11211 -U 112211 -m 64
+    exec /app/vendor/memcached/bin/memcached -u nobody -d -p 11211 -U 112211 -m 64
     \$pmsgr < "memcached"
 )&
 

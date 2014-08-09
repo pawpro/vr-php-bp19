@@ -494,7 +494,7 @@ erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
 )&
 
 (
-    exec /app/vendor/memcached/bin/memcached -u nobody -d -p 11211 -U 112211 -m 64
+    exec /app/vendor/memcached/bin/memcached -u nobody -d -s /tmp/memcache.socket -a 0755 -m 64
     \$pmsgr < "memcached"
 )&
 

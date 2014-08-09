@@ -481,7 +481,7 @@ fi
 erb /app/conf/nginx.conf.erb > /app/vendor/nginx/conf/nginx.conf
 erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
 
-`tail_log_plex ${LOG_FILES} ${SYS_LOG_FILES}`
+`tail_log_plex ${LOG_FILES[@]} ${SYS_LOG_FILES[@]}`
 
 (
     exec /app/vendor/php/sbin/php-fpm -p "/app/vendor/php"
@@ -494,7 +494,7 @@ erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
 )&
 
 (
-    exec /app/vendor/memcached/bin/memcached -u nobody -s /tmp/memcache.socket -a 0755 -m 64
+    exec /app/vendor/memcached/bin/memcached -u nobody -s /tmp/memcache.socket -a 0777 -m 64
     \$pmsgr < "memcached"
 )&
 

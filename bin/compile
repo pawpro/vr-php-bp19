@@ -269,7 +269,7 @@ PHP_INCLUDES=
 COMPILE_CMD=
 BOOT_CMD=
 NGINX_INCLUDES=
-LOG_FILES=( "/app/vendor/nginx/logs/access.log" "/app/vendor/nginx/logs/error.log" "/app/vendor/php/var/log/error.log" )
+LOG_FILES=( "/app/vendor/nginx/logs/access.log" "/app/vendor/nginx/logs/error.log" )
 # END CONFIG
 
 MANIFEST_FILE="manifest.md5sum"

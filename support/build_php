@@ -20,6 +20,7 @@ libmysqlclient-dev \
 libpq-dev \
 libpcre3-dev \
 curl \
+libtool \
 libcurl3 \
 libcurl3-dev \
 libbz2-dev \
@@ -98,6 +99,18 @@ else
     echo "- Skipping RABBITMQ-C"
 fi
 
+if [[ -n "$LIBYAML_VERSION" ]]; then
+    echo "+ Fetching libyaml libraries..."
+    mkdir -p /app/local
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/libyaml-${LIBYAML_VERSION}.tar.gz" -o - | tar xz
+    pushd libyaml-${LIBYAML_VERSION}
+    ./configure --prefix=/app/local --includedir=/app/local/include
+    make install
+    popd
+else
+    echo "- Skipping libyaml"
+fi
+
 echo "+ Fetching PHP sources..."
 curl -L "https://s3.amazonaws.com/${S3_BUCKET}/php-$PHP_VERSION.tar.gz"  -o - | tar xz
 
@@ -154,47 +167,59 @@ export PATH=/app/vendor/php/bin:$PATH
 # configure pear
 pear config-set php_dir /app/vendor/php
 
-if [[ -n "$MEMCACHE_VERSION" ]]; then
-    echo "+ Installing Memcache..."
+if [[ -n "$PHP_MEMCACHE_VERSION" ]]; then
+    echo "+ Installing PHP_Memcache..."
     set +e
-    yes '' | pecl install memcache-${MEMCACHE_VERSION}
+    yes '' | pecl install memcache-${PHP_MEMCACHE_VERSION}
     set -e
 else
-    echo "- Skipping Memcache"
+    echo "- Skipping PHP_Memcache"
 fi
 
-if [[ -n "$MEMCACHED_VERSION" ]]; then
-    echo "+ Installing Memcached..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcached-${MEMCACHED_VERSION}.tgz" | tar xz
-    pushd memcached-${MEMCACHED_VERSION}
+if [[ -n "$PHP_MEMCACHED_VERSION" ]]; then
+    echo "+ Installing PHP_Memcached..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcached-${PHP_MEMCACHED_VERSION}.tgz" | tar xz
+    pushd memcached-${PHP_MEMCACHED_VERSION}
     phpize
     ./configure --prefix=/app/local --with-php-config=/app/vendor/php/bin/php-config --with-libmemcached-dir=/app/local --disable-memcached-sasl
     make install
     popd
 else
-    echo "- Skipping Memcached"
+    echo "- Skipping PHP_Memcached"
 fi
 
-if [[ -n "$RABBITMQ_VERSION" ]]; then
-    echo "+ Installing RabbitMQ..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/amqp-${RABBITMQ_VERSION}.tgz" | tar xz
-    pushd amqp-${RABBITMQ_VERSION}
+if [[ -n "$PHP_RABBITMQ_VERSION" ]]; then
+    echo "+ Installing PHP_RabbitMQ..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/amqp-${PHP_RABBITMQ_VERSION}.tgz" | tar xz
+    pushd amqp-${PHP_RABBITMQ_VERSION}
     phpize
     ./configure --with-amqp --with-librabbitmq-dir=/app/local --with-php-config=/app/vendor/php/bin/php-config
     make install
     popd
 else
-    echo "- Skipping RabbitMQ"
+    echo "- Skipping PHP_RabbitMQ"
 fi
 
-if [[ -n "$NEWRELIC_VERSION" ]]; then
+if [[ -n "$PHP_NEWRELIC_VERSION" ]]; then
     echo "+ Install newrelic..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${NEWRELIC_VERSION}-linux.tar.gz" | tar xz
-    pushd newrelic-php5-${NEWRELIC_VERSION}-linux
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${PHP_NEWRELIC_VERSION}-linux.tar.gz" | tar xz
+    pushd newrelic-php5-${PHP_NEWRELIC_VERSION}-linux
     cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
     popd
 else
-    echo "- Skipping NewRelic"
+    echo "- Skipping PHP_NewRelic"
+fi
+
+if [[ -n "$PHP_YAML_VERSION" ]]; then
+    echo "+ Installing PHP_YAML..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/yaml-${PHP_YAML_VERSION}.tgz" | tar xz
+    pushd yaml-${PHP_YAML_VERSION}
+    phpize
+    ./configure --with-php-config=/app/vendor/php/bin/php-config --with-yaml=/app/local/
+    make install
+    popd
+else
+    echo "- Skipping PHP_YAML"
 fi
 
 echo "+ Packaging PHP..."

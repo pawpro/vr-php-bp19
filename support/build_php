@@ -150,6 +150,7 @@ rm configure
 --enable-mbstring \
 --enable-zip \
 --disable-cgi \
+--disable-cli \
 --disable-debug \
 --disable-pcntl \
 --disable-rpath \
@@ -164,14 +165,13 @@ popd
 # update path
 export PATH=/app/vendor/php/bin:$PATH
 
-# configure pear
-pear config-set php_dir /app/vendor/php
-
 if [[ -n "$PHP_MEMCACHE_VERSION" ]]; then
     echo "+ Installing PHP_Memcache..."
-    set +e
-    yes '' | pecl install memcache-${PHP_MEMCACHE_VERSION}
-    set -e
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcache-${PHP_MEMCACHE_VERSION}.tgz" | tar xz
+    pushd memcache-${PHP_MEMCACHE_VERSION}
+    phpize
+    ./configure --prefix=/app/local --with-php-config=/app/vendor/php/bin/php-config
+    make install
 else
     echo "- Skipping PHP_Memcache"
 fi
@@ -210,6 +210,18 @@ else
     echo "- Skipping PHP_NewRelic"
 fi
 
+if [[ -n "$XHPROF_VERSION" ]]; then
+    echo "+ Installing XHProf..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/xhprof-${XHPROF_VERSION}.tar.gz" | tar xz
+    pushd xhprof-${XHPROF_VERSION}
+    phpize
+    ./configure --enable-xhprof --with-php-config=/app/vendor/php/bin/php-config
+    make install
+    popd
+else
+    echo "- Skipping XHProf"
+fi
+
 if [[ -n "$PHP_YAML_VERSION" ]]; then
     echo "+ Installing PHP_YAML..."
     curl -L "https://s3.amazonaws.com/${S3_BUCKET}/yaml-${PHP_YAML_VERSION}.tgz" | tar xz
@@ -221,6 +233,22 @@ if [[ -n "$PHP_YAML_VERSION" ]]; then
 else
     echo "- Skipping PHP_YAML"
 fi
+
+if [[ -n "$SUHOSIN_VERSION" ]]; then
+    echo "+ Installing Suhosin..."
+    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/suhosin-${SUHOSIN_VERSION}.tgz" | tar xz
+    pushd suhosin-${SUHOSIN_VERSION}
+    phpize
+    ./configure --enable-suhosin --with-php-config=/app/vendor/php/bin/php-config
+    make install
+    popd
+else
+    echo "- Skipping Suhosin"
+fi
+
+echo "+ Cleanup"
+rm -rf /app/local/include
+rm -rf /app/vendor/php/include
 
 echo "+ Packaging PHP..."
 echo ${PHP_VERSION} > /app/vendor/php/VERSION

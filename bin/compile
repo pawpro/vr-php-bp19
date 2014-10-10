@@ -255,9 +255,9 @@ chmod +x "$HOME/bin/jq"
 
 
 # START CONFIG
-S3_URL="https://s3.amazonaws.com/${S3_BUCKET}"
+S3_URL="http://s3.amazonaws.com/${S3_BUCKET}"
 NGINX_VERSION=1.6.0
-PHP_VERSION=5.5.15
+PHP_VERSION=5.5.17
 NEWRELIC_VERSION=4.10.1.62
 MEMCACHED_VERSION=1.4.20
 REPO_URL=${S3_URL}

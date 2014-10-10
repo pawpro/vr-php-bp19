@@ -3,7 +3,7 @@
 export S3_BUCKET="yg-php-buildpack-opi"
 export LIBMCRYPT_VERSION="2.5.8"
 export LIBJPEG_VERSION="9a" 
-export PHP_VERSION="5.5.15"
+export PHP_VERSION="5.5.17"
 export LIBMEMCACHED_VERSION="1.0.18"
 export PHP_MEMCACHED_VERSION="2.2.0"
 export PHP_MEMCACHE_VERSION="3.0.8"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./set-env.sh
+source set-env.sh
 
 set -e
 set -o pipefail
@@ -11,7 +11,7 @@ echo "+ Updating apt-get sources..."
 apt-get -y update
 
 echo "+ Installing build dependencies..."
-# install build deps
+
 apt-get -y install g++ \
 gcc \
 libpng-dev \
@@ -19,6 +19,7 @@ libxml2-dev \
 libmysqlclient-dev \
 libpq-dev \
 libpcre3-dev \
+libtidy-dev \
 curl \
 libtool \
 libcurl3 \
@@ -35,7 +36,7 @@ pushd build
 if [[ -n "$LIBMCRYPT_VERSION" ]]; then
     echo "+ Fetching libmcrypt libraries..."
     mkdir -p /app/local
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/libmcrypt-${LIBMCRYPT_VERSION}.tar.gz" -o - | tar xz -C /app/local
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/libmcrypt-${LIBMCRYPT_VERSION}.tar.gz" -o - | tar xz -C /app/local
 else
     echo "- Skipping libmcrypt"
 fi
@@ -43,9 +44,9 @@ fi
 if [[ -n "$OPENSSL_VERSION" ]]; then
     echo "+ Fetching openssl sources..."
     mkdir -p /app/local
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/openssl_${OPENSSL_VERSION}.tar.gz" -o - | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/openssl_${OPENSSL_VERSION}.tar.gz" -o - | tar xz
     pushd openssl_${OPENSSL_VERSION}
-    ./config --prefix=/app/local --openssldir=/app/local/openssl shared no-threads
+    ./config --prefix=/app/local --openssldir=/app/local/openssl shared no-threads no-ssl2
     make
     make install
     popd
@@ -56,7 +57,7 @@ fi
 if [[ -n "$LIBMEMCACHED_VERSION" ]]; then
     echo "+ Fetching libmemcached libraries..."
     mkdir -p /app/local
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/libmemcached-${LIBMEMCACHED_VERSION}.tar.gz" -o - | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/libmemcached-${LIBMEMCACHED_VERSION}.tar.gz" -o - | tar xz
     pushd libmemcached-${LIBMEMCACHED_VERSION}
     ./configure --prefix=/app/local
     make install
@@ -68,7 +69,7 @@ fi
 if [[ -n "$LIBFREETYPE_VERSION" ]]; then
     echo "+ Fetching freetype libraries..."
     mkdir -p /app/local
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/freetype-${LIBFREETYPE_VERSION}.tar.gz" -o - | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/freetype-${LIBFREETYPE_VERSION}.tar.gz" -o - | tar xz
     pushd freetype-${LIBFREETYPE_VERSION}
     ./configure --prefix=/app/local
     make install
@@ -79,7 +80,7 @@ fi
 
 if [[ -n "$LIBJPEG_VERSION" ]]; then
     echo "+ Fetching libjpeg libraries..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/jpegsrc.v${LIBJPEG_VERSION}.tar.gz" | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/jpegsrc.v${LIBJPEG_VERSION}.tar.gz" | tar xz
     pushd jpeg-${LIBJPEG_VERSION}
     ./configure --prefix=/app/local
     make install
@@ -90,7 +91,7 @@ fi
 
 if [[ -n "$LIBRABBITMQ_VERSION" ]]; then
     echo "+ Fetching RABBITMQ-C libraries..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/rabbitmq-c-${LIBRABBITMQ_VERSION}.tar.gz" | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/rabbitmq-c-${LIBRABBITMQ_VERSION}.tar.gz" | tar xz
     pushd rabbitmq-c-${LIBRABBITMQ_VERSION}
     ./configure --prefix=/app/local
     make install
@@ -102,8 +103,9 @@ fi
 if [[ -n "$LIBYAML_VERSION" ]]; then
     echo "+ Fetching libyaml libraries..."
     mkdir -p /app/local
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/libyaml-${LIBYAML_VERSION}.tar.gz" -o - | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/libyaml-${LIBYAML_VERSION}.tar.gz" -o - | tar xz
     pushd libyaml-${LIBYAML_VERSION}
+    ./bootstrap
     ./configure --prefix=/app/local --includedir=/app/local/include
     make install
     popd
@@ -112,7 +114,7 @@ else
 fi
 
 echo "+ Fetching PHP sources..."
-curl -L "https://s3.amazonaws.com/${S3_BUCKET}/php-$PHP_VERSION.tar.gz"  -o - | tar xz
+curl -L "http://s3.amazonaws.com/${S3_BUCKET}/php-$PHP_VERSION.tar.gz"  -o - | tar xz
 
 pushd php-$PHP_VERSION
 
@@ -135,6 +137,7 @@ rm configure
 --with-jpeg-dir=/app/local \
 --with-iconv \
 --with-mhash \
+--with-openssl \
 --with-openssl-dir=/app/local \
 --with-pcre-regex \
 --with-png-dir \
@@ -178,7 +181,7 @@ fi
 
 if [[ -n "$PHP_MEMCACHED_VERSION" ]]; then
     echo "+ Installing PHP_Memcached..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcached-${PHP_MEMCACHED_VERSION}.tgz" | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/memcached-${PHP_MEMCACHED_VERSION}.tgz" | tar xz
     pushd memcached-${PHP_MEMCACHED_VERSION}
     phpize
     ./configure --prefix=/app/local --with-php-config=/app/vendor/php/bin/php-config --with-libmemcached-dir=/app/local --disable-memcached-sasl
@@ -190,7 +193,7 @@ fi
 
 if [[ -n "$PHP_RABBITMQ_VERSION" ]]; then
     echo "+ Installing PHP_RabbitMQ..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/amqp-${PHP_RABBITMQ_VERSION}.tgz" | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/amqp-${PHP_RABBITMQ_VERSION}.tgz" | tar xz
     pushd amqp-${PHP_RABBITMQ_VERSION}
     phpize
     ./configure --with-amqp --with-librabbitmq-dir=/app/local --with-php-config=/app/vendor/php/bin/php-config
@@ -202,7 +205,7 @@ fi
 
 if [[ -n "$PHP_NEWRELIC_VERSION" ]]; then
     echo "+ Install newrelic..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${PHP_NEWRELIC_VERSION}-linux.tar.gz" | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${PHP_NEWRELIC_VERSION}-linux.tar.gz" | tar xz
     pushd newrelic-php5-${PHP_NEWRELIC_VERSION}-linux
     cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
     popd
@@ -224,7 +227,7 @@ fi
 
 if [[ -n "$PHP_YAML_VERSION" ]]; then
     echo "+ Installing PHP_YAML..."
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/yaml-${PHP_YAML_VERSION}.tgz" | tar xz
+    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/yaml-${PHP_YAML_VERSION}.tgz" | tar xz
     pushd yaml-${PHP_YAML_VERSION}
     phpize
     ./configure --with-php-config=/app/vendor/php/bin/php-config --with-yaml=/app/local/
@@ -257,7 +260,7 @@ tar czf $orig_dir/php-${PHP_VERSION}-with-fpm-vr.tar.gz *
 popd
 
 pushd /app/local
-tar czf $orig_dir/php-5.5.15-libs-vr.tar.gz *
+tar czf $orig_dir/php-${PHP_VERSION}-libs-vr.tar.gz *
 popd
 
 popd

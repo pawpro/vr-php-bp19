@@ -66,11 +66,12 @@ fi
 
 echo "+ Packaging NGINX..."
 pushd /app/vendor/nginx
-tar czf $orig_dir/nginx-${NGINX_VERSION}-vr.tar.gz *
+strip /app/vendor/nginx/sbin/nginx
+tar czf $orig_dir/nginx-${NGINX_VERSION}-vr.v1.tar.gz *
 popd
 
 pushd /app/local
-tar czf $orig_dir/nginx-${NGINX_VERSION}-libs-vr.tar.gz *
+tar czf $orig_dir/nginx-${NGINX_VERSION}-libs-vr.v1.tar.gz *
 popd
 
 popd

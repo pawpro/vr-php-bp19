@@ -256,11 +256,25 @@ rm -rf /app/vendor/php/include
 echo "+ Packaging PHP..."
 echo ${PHP_VERSION} > /app/vendor/php/VERSION
 pushd /app/vendor/php
-tar czf $orig_dir/php-${PHP_VERSION}-with-fpm-vr.tar.gz *
+
+if [[ -f "/app/vendor/php/bin/php" ]]; then
+    strip /app/vendor/php/bin/php
+fi
+
+if [[ -f "/app/vendor/php/sbin/php-fpm" ]]; then
+    strip /app/vendor/php/sbin/php-fpm
+fi
+
+if [[ -f "/app/vendor/node/bin/node" ]]; then
+    strip /app/vendor/node/bin/node
+fi
+
+
+tar czf $orig_dir/php-${PHP_VERSION}-with-fpm-vr.v1.tar.gz *
 popd
 
 pushd /app/local
-tar czf $orig_dir/php-${PHP_VERSION}-libs-vr.tar.gz *
+tar czf $orig_dir/php-${PHP_VERSION}-libs-vr.v1.tar.gz *
 popd
 
 popd

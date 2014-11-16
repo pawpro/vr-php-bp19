@@ -253,28 +253,24 @@ echo "+ Cleanup"
 rm -rf /app/local/include
 rm -rf /app/vendor/php/include
 
+pushd /app/
+echo "+ Stripping binaries..."
+set +e
+find local/bin local/lib vendor -regex ".*\.\(so\|so\.([0-9]\.?)+\)" -exec strip {} \;
+find local/bin -exec strip {} \;
+find vendor -regex "[^/]+/.*\(s\)?bin/[^.]*" -exec strip {} \;
+set -e
+popd
+
 echo "+ Packaging PHP..."
 echo ${PHP_VERSION} > /app/vendor/php/VERSION
 pushd /app/vendor/php
 
-if [[ -f "/app/vendor/php/bin/php" ]]; then
-    strip /app/vendor/php/bin/php
-fi
-
-if [[ -f "/app/vendor/php/sbin/php-fpm" ]]; then
-    strip /app/vendor/php/sbin/php-fpm
-fi
-
-if [[ -f "/app/vendor/node/bin/node" ]]; then
-    strip /app/vendor/node/bin/node
-fi
-
-
-tar czf $orig_dir/php-${PHP_VERSION}-with-fpm-vr.v1.tar.gz *
+tar czf $orig_dir/php-${PHP_VERSION}-with-fpm-vr.tar.gz *
 popd
 
 pushd /app/local
-tar czf $orig_dir/php-${PHP_VERSION}-libs-vr.v1.tar.gz *
+tar czf $orig_dir/php-${PHP_VERSION}-libs-vr.tar.gz *
 popd
 
 popd

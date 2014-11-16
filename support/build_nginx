@@ -64,14 +64,22 @@ if [[ -n "$NGINX_VERSION" ]]; then
     popd
 fi
 
+pushd /app/
+echo "+ Stripping binaries..."
+set +e
+find local/bin local/lib vendor -regex ".*\.\(so\|so\.([0-9]\.?)+\)" -exec strip {} \;
+find local/bin -exec strip {} \;
+find vendor -regex "[^/]+/.*\(s\)?bin/[^.]*" -exec strip {} \;
+set -e
+popd
+
 echo "+ Packaging NGINX..."
 pushd /app/vendor/nginx
-strip /app/vendor/nginx/sbin/nginx
-tar czf $orig_dir/nginx-${NGINX_VERSION}-vr.v1.tar.gz *
+tar czf $orig_dir/nginx-${NGINX_VERSION}-vr.tar.gz *
 popd
 
 pushd /app/local
-tar czf $orig_dir/nginx-${NGINX_VERSION}-libs-vr.v1.tar.gz *
+tar czf $orig_dir/nginx-${NGINX_VERSION}-libs-vr.tar.gz *
 popd
 
 popd

@@ -16,7 +16,7 @@ http {
     keepalive_timeout  65;
 
     error_log logs/error.log info;
-    access_log logs/access.log buffer=4k;
+    access_log logs/access.log main buffer=8k;
 
     client_max_body_size 100m;
     client_body_timeout 600s;

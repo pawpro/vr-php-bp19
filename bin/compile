@@ -462,7 +462,7 @@ pmsgr=/tmp/pmsgr
 rm -f \$pmsgr
 mkfifo \$pmsgr
 
-NEWRELIC_LICENSE_KEY=\$(grep newrelic_license_key settings.yaml | awk '{print $2}')
+NEWRELIC_LICENSE_KEY=\$(grep newrelic_license_key /settings.yaml | awk '{print $2}')
 
 for var in \`env | cut -f1 -d=\`; do
     echo "env[\$var] = \\$\${var}" >> /app/vendor/php/etc/php-fpm.conf

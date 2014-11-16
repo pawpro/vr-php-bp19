@@ -462,7 +462,7 @@ pmsgr=/tmp/pmsgr
 rm -f \$pmsgr
 mkfifo \$pmsgr
 
-NEWRELIC_LICENSE_KEY=\$(grep newrelic_license_key /settings.yaml | awk '{print $2}')
+export NEWRELIC_LICENSE_KEY=\$(grep newrelic_license_key /settings.yaml | awk '{print \$2}')
 
 for var in \`env | cut -f1 -d=\`; do
     echo "env[\$var] = \\$\${var}" >> /app/vendor/php/etc/php-fpm.conf
@@ -474,7 +474,7 @@ export NGINX_INCLUDES="$NGINX_INCLUDES"
 $BOOT_CMDS
 
 if [ -n "\$NEWRELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
-    echo "newrelic.license=\"\$NEW_RELIC_LICENSE_KEY\"" >> /app/vendor/php/etc/conf.d/newrelic.ini
+    echo "newrelic.license=\"\$NEWRELIC_LICENSE_KEY\"" >> /app/vendor/php/etc/conf.d/newrelic.ini
     echo "newrelic.appname=\"\$NEW_RELIC_APPNAME\"" >> /app/vendor/php/etc/conf.d/newrelic.ini
 fi
 

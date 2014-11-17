@@ -498,6 +498,14 @@ erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
     \$pmsgr < "memcached"
 )&
 
+if [ -n "\$NEWRELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
+
+    (
+        exec /app/vendor/newrelic/newrelic-daemon.x64 -P /tmp/newrelic.socket -f -d error
+        \$pmsgr < "newrelic"
+    )&
+
+fi
 
 read exitproc <\$pmsgr
 echo "Boot failed: \$exitproc"

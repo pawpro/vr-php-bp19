@@ -208,6 +208,7 @@ if [[ -n "$PHP_NEWRELIC_VERSION" ]]; then
     curl -L "http://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${PHP_NEWRELIC_VERSION}-linux.tar.gz" | tar xz
     pushd newrelic-php5-${PHP_NEWRELIC_VERSION}-linux
     cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
+    mkdir -p /app/vendor/newrelic
     cp -f daemon/newrelic-daemon.x64 /app/vendor/newrelic/newrelic-daemon.x64 && chmod +x /app/vendor/newrelic/newrelic-daemon.x64 && strip /app/vendor/newrelic/newrelic-daemon.x64
 
     popd

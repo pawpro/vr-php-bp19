@@ -481,55 +481,64 @@ fi
 erb /app/conf/nginx.conf.erb > /app/vendor/nginx/conf/nginx.conf
 erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
 
-#`tail_log_plex \${LOG_FILES[@]} \${USER_LOG_FILES[@]} \${SYS_LOG_FILES[@]}`
-
+echo "Creating pipes"
 (
- rm -f /tmp/access_log
- mkfifo /tmp/access_log
- tail -f /tmp/access_log
+rm -f /tmp/access_log
+mkfifo /tmp/access_log -m 0666
 )&
 
 (
- rm -f /tmp/error_log
- mkfifo /tmp/error_log
- tail -f /tmp/error_log
+rm -f /tmp/error_log
+mkfifo /tmp/error_log -m 0666
 )&
 
-)
- rm -f /tmp/app_log
- mkfifo /tmp/app_log
- tail -f /tmp/app_log
+(
+rm -f /tmp/app_log
+mkfifo /tmp/app_log -m 0666
 )&
 
-)
- rm -f /tmp/php.log
- mkfifo /tmp/php.log
- tail -f /tmp/php.log
+(
+rm -f /tmp/php.log
+mkfifo /tmp/php.log -m 0666
 )&
 
+(
+rm -f /tmp/newrelic.log
+mkfifo /tmp/newrelic.log -m 0666
+)&
+
+echo "Done"
+
+(
+echo "Listening"
+tail -f /tmp/access_log -f /tmp/error_log -f /tmp/app_log -f /tmp/php.log -f /tmp/newrelic.log
+)&
+
+echo "Starting FPM"
 (
     exec /app/vendor/php/sbin/php-fpm -p "/app/vendor/php"
-    \$pmsgr < "php-fpm"
+    $pmsgr < "php-fpm"
 )&
-
+echo "Starting Nginx"
 (
     exec /app/vendor/nginx/sbin/nginx -p "/app/vendor/nginx" -c /app/vendor/nginx/conf/nginx.conf
     \$pmsgr < "nginx"
 )&
-
+echo "Starting memcached"
 (
     exec /app/vendor/memcached/bin/memcached -u nobody -s /tmp/memcache.socket -a 0777 -m 64
     \$pmsgr < "memcached"
 )&
 
 if [ -n "\$NEWRELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
-
+    echo "Starting New Relic daemon"
     (
-        exec /app/vendor/php/newrelic/newrelic-daemon.x64 -P /tmp/newrelic.socket -f -d error
+        exec /app/vendor/php/newrelic/newrelic-daemon.x64 -P /tmp/newrelic.socket -f -d error -l /tmp/newrelic.log
         \$pmsgr < "newrelic"
     )&
 
 fi
+echo "All done"
 
 read exitproc <\$pmsgr
 echo "Boot failed: \$exitproc"

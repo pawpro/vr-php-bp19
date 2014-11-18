@@ -15,8 +15,8 @@ http {
 
     keepalive_timeout  65;
 
-    error_log /dev/stdout notice;
-    access_log /dev/stdout;
+    error_log /tmp/error_log notice;
+    access_log /tmp/access_log;
 
     client_max_body_size 100m;
     client_body_timeout 600s;

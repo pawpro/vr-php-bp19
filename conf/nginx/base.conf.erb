@@ -15,8 +15,8 @@ http {
 
     keepalive_timeout  65;
 
-    error_log /tmp/error_log notice;
-    access_log /tmp/access_log;
+    error_log syslog:server=127.0.0.1,facility=local7,tag=nginx notice;
+    access_log syslog:server=127.0.0.1,facility=local7,tag=nginx,severity=info;
 
     client_max_body_size 100m;
     client_body_timeout 600s;

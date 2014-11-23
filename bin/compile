@@ -273,9 +273,9 @@ LOG_FILES=( "/app/vendor/nginx/logs/access.log" "/app/vendor/nginx/logs/error.lo
 # END CONFIG
 
 MANIFEST_FILE="manifest.md5sum"
-NGINX_FILE="nginx-${NGINX_VERSION}-vr.v6.tar.gz"
-PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.v6.tar.gz"
-PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.v6.tar.gz"
+NGINX_FILE="nginx-${NGINX_VERSION}-vr.v8.tar.gz"
+PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.v8.tar.gz"
+PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.v8.tar.gz"
 MEMCACHED_FILE="memcached-server-${MEMCACHED_VERSION}-vr.tar.gz"
 
 MANIFEST_URL="${REPO_URL}/${MANIFEST_FILE}"
@@ -481,39 +481,6 @@ fi
 erb /app/conf/nginx.conf.erb > /app/vendor/nginx/conf/nginx.conf
 erb /app/conf/site.conf.erb > /app/vendor/nginx/conf/site.conf
 
-echo "Creating pipes"
-(
-rm -f /tmp/access_log
-mkfifo /tmp/access_log -m 0666
-)&
-
-(
-rm -f /tmp/error_log
-mkfifo /tmp/error_log -m 0666
-)&
-
-(
-rm -f /tmp/app_log
-mkfifo /tmp/app_log -m 0666
-)&
-
-(
-rm -f /tmp/php.log
-mkfifo /tmp/php.log -m 0666
-)&
-
-(
-rm -f /tmp/newrelic.log
-mkfifo /tmp/newrelic.log -m 0666
-)&
-
-echo "Done"
-
-(
-echo "Listening"
-tail -f /tmp/access_log -f /tmp/error_log -f /tmp/app_log -f /tmp/php.log -f /tmp/newrelic.log
-)&
-
 echo "Starting FPM"
 (
     exec /app/vendor/php/sbin/php-fpm -p "/app/vendor/php"
@@ -535,6 +502,10 @@ if [ -n "\$NEWRELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
     (
         exec /app/vendor/php/newrelic/newrelic-daemon.x64 -P /tmp/newrelic.socket -f -d error -l /tmp/newrelic.log
         \$pmsgr < "newrelic"
+    )&
+
+    (
+     tail -f /tmp/newrelic.log
     )&
 
 fi

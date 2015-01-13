@@ -273,9 +273,9 @@ LOG_FILES=( "/app/vendor/nginx/logs/access.log" "/app/vendor/nginx/logs/error.lo
 # END CONFIG
 
 MANIFEST_FILE="manifest.md5sum"
-NGINX_FILE="nginx-${NGINX_VERSION}-vr.v8.tar.gz"
-PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.v8.tar.gz"
-PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.v8.tar.gz"
+NGINX_FILE="nginx-${NGINX_VERSION}-vr.v9.tar.gz"
+PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.v9.tar.gz"
+PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.v9.tar.gz"
 MEMCACHED_FILE="memcached-server-${MEMCACHED_VERSION}-vr.tar.gz"
 
 MANIFEST_URL="${REPO_URL}/${MANIFEST_FILE}"
@@ -424,7 +424,7 @@ cp "$basedir/../conf/nginx/base.conf.erb" "${BUILD_DIR}/conf/nginx.conf.erb"
 cp "$basedir/../conf/nginx/site.conf.erb" "${BUILD_DIR}/conf/site.conf.erb"
 cp "$basedir/../conf/php/php-fpm.conf" "${BUILD_DIR}/vendor/php/etc/php-fpm.conf"
 cp "$basedir/../conf/php/php.ini" "${BUILD_DIR}/vendor/php/php.ini"
-cp -f "$basedir/../conf/php/newrelic.ini" "${BUILD_DIR}/vendor/php/etc/conf.d/newrelic.ini"
+cp -r -f "$basedir/../conf/etc.d" "${BUILD_DIR}/vendor/php/etc.d"
 
 #pear config-set php_ini /app/vendor/php/etc/php.ini &> /dev/null
 
@@ -462,7 +462,7 @@ pmsgr=/tmp/pmsgr
 rm -f \$pmsgr
 mkfifo \$pmsgr
 mesg y
-export NEWRELIC_LICENSE_KEY=\$(grep newrelic_license_key /settings.yaml | awk '{print \$2}')
+export NEW_RELIC_LICENSE_KEY=\$(grep newrelic_license_key /settings.yaml | awk '{print \$2}')
 
 for var in \`env | cut -f1 -d=\`; do
     echo "env[\$var] = \\$\${var}" >> /app/vendor/php/etc/php-fpm.conf
@@ -473,9 +473,9 @@ export INDEX_DOCUMENT="$INDEX_DOCUMENT"
 export NGINX_INCLUDES="$NGINX_INCLUDES"
 $BOOT_CMDS
 
-if [ -n "\$NEWRELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
-    echo "newrelic.license=\"\$NEWRELIC_LICENSE_KEY\"" >> /app/vendor/php/etc/conf.d/newrelic.ini
-    echo "newrelic.appname=\"\$NEW_RELIC_APPNAME\"" >> /app/vendor/php/etc/conf.d/newrelic.ini
+if [ -n "\$NEW_RELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
+    echo "newrelic.license=\"\$NEW_RELIC_LICENSE_KEY\"" >> /app/vendor/php/etc.d/newrelic.ini
+    echo "newrelic.appname=\"\$NEW_RELIC_APPNAME\"" >> /app/vendor/php/etc.d/newrelic.ini
 fi
 
 erb /app/conf/nginx.conf.erb > /app/vendor/nginx/conf/nginx.conf
@@ -497,10 +497,11 @@ echo "Starting memcached"
     \$pmsgr < "memcached"
 )&
 
-if [ -n "\$NEWRELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
+if [ -n "\$NEW_RELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
     echo "Starting New Relic daemon"
     (
-        exec /app/vendor/php/newrelic/newrelic-daemon.x64 -P /tmp/newrelic.socket -f -d error -l /tmp/newrelic.log
+        rm -f /tmp/.newrelic.socket
+        exec /app/vendor/php/newrelic/newrelic-daemon.x64 -P /tmp/.newrelic.socket -f -d error -l /tmp/newrelic.log
         \$pmsgr < "newrelic"
     )&
 

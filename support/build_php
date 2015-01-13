@@ -24,6 +24,7 @@ curl \
 libtool \
 libcurl3 \
 libcurl3-dev \
+libicu-dev \
 libbz2-dev \
 autoconf \
 git-core

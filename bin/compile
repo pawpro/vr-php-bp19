@@ -273,9 +273,9 @@ LOG_FILES=( "/app/vendor/nginx/logs/access.log" "/app/vendor/nginx/logs/error.lo
 # END CONFIG
 
 MANIFEST_FILE="manifest.md5sum"
-NGINX_FILE="nginx-${NGINX_VERSION}-vr.v9.tar.gz"
-PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.v9.tar.gz"
-PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.v9.tar.gz"
+NGINX_FILE="nginx-${NGINX_VERSION}-vr.v10.tar.gz"
+PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.v10.tar.gz"
+PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.v10.tar.gz"
 MEMCACHED_FILE="memcached-server-${MEMCACHED_VERSION}-vr.tar.gz"
 
 MANIFEST_URL="${REPO_URL}/${MANIFEST_FILE}"

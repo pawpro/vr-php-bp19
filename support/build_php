@@ -152,6 +152,7 @@ rm configure
 --enable-mbregex \
 --enable-mbstring \
 --enable-zip \
+--enable-intl \
 --disable-cgi \
 --disable-cli \
 --disable-debug \

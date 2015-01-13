@@ -501,6 +501,7 @@ if [ -n "\$NEW_RELIC_LICENSE_KEY" ] && [ -n "\$NEW_RELIC_APPNAME" ]; then
     echo "Starting New Relic daemon"
     (
         rm -f /tmp/.newrelic.socket
+        touch /tmp/newrelic.log
         exec /app/vendor/php/newrelic/newrelic-daemon.x64 -P /tmp/.newrelic.socket -f -d error -l /tmp/newrelic.log
         \$pmsgr < "newrelic"
     )&

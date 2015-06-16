@@ -12,6 +12,7 @@ if [ -n "$BUILDPACK_DEBUG" ]; then
     set -x
 fi
 
+BUILD_SUFFIX=".v11"
 BUILD_DIR="$1"
 CACHE_DIR="$2"
 
@@ -256,7 +257,7 @@ chmod +x "$HOME/bin/jq"
 
 # START CONFIG
 S3_URL="http://s3.amazonaws.com/${S3_BUCKET}"
-NGINX_VERSION=1.6.0
+NGINX_VERSION=1.8.0
 PHP_VERSION=5.5.17
 NEWRELIC_VERSION=4.10.1.62
 MEMCACHED_VERSION=1.4.20
@@ -273,10 +274,10 @@ LOG_FILES=( "/app/vendor/nginx/logs/access.log" "/app/vendor/nginx/logs/error.lo
 # END CONFIG
 
 MANIFEST_FILE="manifest.md5sum"
-NGINX_FILE="nginx-${NGINX_VERSION}-vr.v10.tar.gz"
-PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr.v10.tar.gz"
-PHP_FILE="php-${PHP_VERSION}-with-fpm-vr.v10.tar.gz"
-MEMCACHED_FILE="memcached-server-${MEMCACHED_VERSION}-vr.tar.gz"
+NGINX_FILE="nginx-${NGINX_VERSION}-vr${BUILD_SUFFIX}.tar.gz"
+PHP_LIBS_FILE="php-${PHP_VERSION}-libs-vr${BUILD_SUFFIX}.tar.gz"
+PHP_FILE="php-${PHP_VERSION}-with-fpm-vr${BUILD_SUFFIX}.tar.gz"
+MEMCACHED_FILE="memcached-server-${MEMCACHED_VERSION}-vr${BUILD_SUFFIX}.tar.gz"
 
 MANIFEST_URL="${REPO_URL}/${MANIFEST_FILE}"
 NGINX_URL="${REPO_URL}/${NGINX_FILE}"

@@ -1,13 +1,16 @@
 #!/bin/bash
-
-./set-env.sh
+source set-env.sh
 
 set -e
 set -o pipefail
 
 orig_dir=$( pwd )
-mkdir -p build
-pushd build
+
+BUILD_DIR="/tmp/build"
+
+orig_dir=$( pwd )
+mkdir -p ${BUILD_DIR}
+pushd ${BUILD_DIR}
 
 echo "+ Fetching memcached server sources..."
 rm -rf /app/vendor/memcached
@@ -21,7 +24,7 @@ popd
 
 echo "+ Packaging memcached server..."
 pushd /app/vendor/memcached
-tar czf $orig_dir/memcached-server-${MEMCACHED_VERSION}-vr.tar.gz *
+tar czf $orig_dir/memcached-server-${MEMCACHED_VERSION}-vr${BUILD_SUFFIX}.tar.gz *
 popd
 
 echo "+ Binaries are packaged in $orig_dir/*.tar.gz. Upload to s3 bucket of your choice."

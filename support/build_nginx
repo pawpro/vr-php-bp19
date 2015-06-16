@@ -12,15 +12,16 @@ apt-get -y update
 
 echo "+ Installing build dependencies..."
 # install build deps
-apt-get -y install g++ \
-gcc \
-curl \
-autoconf 
+# apt-get -y install g++ \
+# gcc \
+# curl \
+# autoconf 
 
+BUILD_DIR="/tmp/build"
 rm -rf /app
-rm -rf /root/build
-mkdir -p build
-pushd build
+rm -rf ${BUILD_DIR}
+mkdir -p ${BUILD_DIR}
+pushd ${BUILD_DIR}
 
 if [[ -n "$NGINX_VERSION" ]]; then
     echo "+ Fetching Nginx ..."
@@ -39,18 +40,21 @@ else
     echo "- Skipping PCRE"
 fi
 
-if [[ -n "$OPENSSL_VERSION" ]]; then
-    echo "+ Fetching openssl sources..."
-    mkdir -p /app/local
-    curl -L "https://s3.amazonaws.com/${S3_BUCKET}/openssl_${OPENSSL_VERSION}.tar.gz" -o - | tar xz
-    pushd openssl_${OPENSSL_VERSION}
-    ./config --prefix=/app/local --openssldir=/app/local/openssl shared no-threads
-    make
-    make install
-    popd
-else
-    echo "- Skipping openssl"
-fi
+# if [[ -n "$OPENSSL_VERSION" ]]; then
+#     echo "+ Fetching openssl sources..."
+#     mkdir -p /app/local
+#     curl -L "http://s3.amazonaws.com/${S3_BUCKET}/openssl_${OPENSSL_VERSION}.tar.gz" -o - | tar xz
+#     OPENSSL_SRC_DIR="${BUILD_DIR}/openssl_${OPENSSL_VERSION}"
+#     pushd $openssl_${OPENSSL_VERSION}
+#     set +o pipefail
+#     make clean || true
+#     set -o pipefail
+#     ./config --prefix=/app/local --openssldir=/app/local/openssl no-shared no-threads no-ssl2
+#     make install
+#     popd
+# else
+#     echo "- Skipping openssl"
+# fi
 
 if [[ -n "$NGINX_VERSION" ]]; then
     echo "+ Building Nginx ..."
@@ -58,8 +62,12 @@ if [[ -n "$NGINX_VERSION" ]]; then
     ./configure --prefix=/app/vendor/nginx \
     --with-pcre=contrib/pcre-${PCRE_VERSION} \
     --with-http_gzip_static_module \
+    --with-http_realip_module \
     --with-http_stub_status_module \
-    --with-http_ssl_module
+    --with-http_spdy_module \
+    --with-cc-opt="-static -static-libgcc " \
+    --with-ld-opt="-static -L/app/local/lib" 
+
     make install
     popd
 fi
@@ -75,11 +83,7 @@ popd
 
 echo "+ Packaging NGINX..."
 pushd /app/vendor/nginx
-tar czf $orig_dir/nginx-${NGINX_VERSION}-vr.tar.gz *
-popd
-
-pushd /app/local
-tar czf $orig_dir/nginx-${NGINX_VERSION}-libs-vr.tar.gz *
+tar czf $orig_dir/nginx-${NGINX_VERSION}-vr${BUILD_SUFFIX}.tar.gz *
 popd
 
 popd

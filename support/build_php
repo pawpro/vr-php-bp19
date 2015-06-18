@@ -329,8 +329,8 @@ make clean || true
     --disable-all \
     --disable-cgi \
     --disable-fpm \
-    --enable-shared \
-    --disable-static \
+    --disable-shared \
+    --enable-static \
     --prefix=/app/vendor/php \
     --with-config-file-path=/app/vendor/php \
     --with-config-file-scan-dir=/app/vendor/php/etc.d
@@ -453,8 +453,7 @@ make clean || true
     --with-yaml=/app/local \
     --with-zlib-dir=/app/local \
     --enable-bcmath \
-    --enable-cli \
-    --enable-memcached \
+    --enable-memcache \
     --enable-fpm \
     --enable-gd-native-ttf \
     --enable-inline-optimization \
@@ -467,7 +466,8 @@ make clean || true
     --enable-mysqlnd \
     --enable-session \
     --enable-zip \
-    --enable-shared \
+    --disable-cli \
+    --disable-shared \
     --enable-static
 
 echo "+ Compiling PHP..."

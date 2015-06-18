@@ -17,7 +17,7 @@ rm -rf /app/vendor/memcached
 mkdir -p /app/vendor/memcached
 curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcached-server-${MEMCACHED_VERSION}.tar.gz" -o - | tar xz
 pushd memcached-server-${MEMCACHED_VERSION}
-./configure --prefix=/app/vendor/memcached
+./configure --prefix=/app/vendor/memcached --with-libevent=/app/local
 make
 make install
 popd

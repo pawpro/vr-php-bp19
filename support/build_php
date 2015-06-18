@@ -8,228 +8,419 @@ set -o pipefail
 orig_dir=$( pwd )
 
 echo "+ Updating apt-get sources..."
-apt-get -y update
+
 
 echo "+ Installing build dependencies..."
 BUILD_DIR="/tmp/build"
-apt-get -y install g++ \
-gcc \
-libxml2-dev \
-libmysqlclient-dev \
-libpq-dev \
-libpcre3-dev \
-libtidy-dev \
-curl \
-libtool \
-libicu-dev \
-libbz2-dev \
-autoconf \
-git-core \
-libpng-dev \
-yasm
 
-rm -rf /app
-rm -rf ${BUILD_DIR}
+function fetch_package() {
+    FILE=$1
+    if [ ! -f /root/vr/${FILE} ]; then
+        pushd /root/vr
+        curl -L "http://s3.amazonaws.com/${S3_BUCKET}/${FILE}" -o ${FILE}
+        popd
+    fi
+    cp /root/vr/${FILE} .
+}
+
+if [[ $1 == "clean" ]]; then
+    echo "+ Cleaning up..."
+    rm -rf /app
+    rm -rf ${BUILD_DIR}
+    
+    apt-get -y update
+    apt-get -y install g++ \
+    gcc \
+    curl \
+    libtool \
+    autoconf \
+    git-core \
+    yasm
+
+fi
+mkdir -p /app/local
 mkdir -p ${BUILD_DIR}
+
 pushd ${BUILD_DIR}
 
-if [[ -n "$LIBMCRYPT_VERSION" ]]; then
-    echo "+ Fetching libmcrypt libraries..."
-    mkdir -p /app/local
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/libmcrypt-${LIBMCRYPT_VERSION}.tar.gz" -o - | tar xz -C /app/local
+export CPPFLAGS="-I/app/local/include"
+export LDFLAGS="-L/app/local/lib"
+
+if [[ -n "$LIBBZIP2_VERSION" && ! -d bzip2-${LIBBZIP2_VERSION} ]]; then
+    echo "+ Fetching libzip2 libraries..."
+    FILE="bzip2-${LIBBZIP2_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd bzip2-${LIBBZIP2_VERSION}
+        make PREFIX=/app/local
+        make install
+        # cp libbz2.so.${LIBBZIP2_VERSION} /app/local/lib/
+        # pushd /app/local/lib/
+        #     ln -s libbz2.so.${LIBBZIP2_VERSION} libbz2.so.1.0
+        #     ln -s libbz2.so.${LIBBZIP2_VERSION} libbz2.so
+        # popd 
+    popd
 else
-    echo "- Skipping libmcrypt"
+    echo "- Skipping libzip2 (or already done)"
 fi
 
-if [[ -n "$OPENSSL_VERSION" ]]; then
+if [[ -n "$LIBFREETYPE_VERSION" && ! -d freetype-${LIBFREETYPE_VERSION} ]]; then
+    echo "+ Fetching freetype libraries..."
+    FILE="freetype-${LIBFREETYPE_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd freetype-${LIBFREETYPE_VERSION}
+    set +o pipefail
+    make clean || true
+    ./configure --prefix=/app/local --disable-static
+    make install || true
+    set -o pipefail
+    popd
+else
+    echo "- Skipping Custom Freetype (or already done)"
+fi
+
+if [[ -n "$LIBMCRYPT_VERSION" && ! -d libmcrypt-${LIBMCRYPT_VERSION} ]]; then
+    echo "+ Fetching libmcrypt libraries..."
+    FILE="libmcrypt-src-${LIBMCRYPT_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd libmcrypt-${LIBMCRYPT_VERSION}
+    set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --prefix=/app/local  --disable-static
+    make install
+    popd
+else
+    echo "- Skipping libmcrypt (or already done)"
+fi
+
+if [[ -n "$LIBXML2_VERSION" && ! -d libxml2-${LIBXML2_VERSION} ]]; then
+    echo "+ Fetching libxml2 sources..."
+    FILE="libxml2-${LIBXML2_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd libxml2-${LIBXML2_VERSION}
+    set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --prefix=/app/local --with-python=no  --disable-static
+    make install
+    popd
+else
+    echo "- Skipping libxml2 (or already done)"
+fi
+
+if [[ -n "$LIBXSLT_VERSION" && ! -d libxslt-${LIBXSLT_VERSION} ]]; then
+    echo "+ Fetching libxslt sources..."
+    FILE="libxslt-${LIBXSLT_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd libxslt-${LIBXSLT_VERSION}
+    set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --prefix=/app/local --with-python=no --with-libxml-prefix=/app/local  --disable-static
+    make install
+    popd
+else
+    echo "- Skipping libxslt (or already done)"
+fi
+
+if [[ -n "$ZLIB_VERSION" && ! -d zlib-${ZLIB_VERSION} ]]; then
+    echo "+ Fetching zlib sources..."
+    FILE="zlib-${ZLIB_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd zlib-${ZLIB_VERSION}
+    set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --prefix=/app/local 
+    set +o pipefail
+    make install || true
+    set -o pipefail
+    popd
+else
+    echo "- Skipping zlib (or already done)"
+fi
+
+if [[ -n "$OPENSSL_VERSION" && ! -d openssl_${OPENSSL_VERSION} ]]; then
     echo "+ Fetching openssl sources..."
-    mkdir -p /app/local
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/openssl_${OPENSSL_VERSION}.tar.gz" -o - | tar xz
+    FILE="openssl_${OPENSSL_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
     pushd openssl_${OPENSSL_VERSION}
     set +o pipefail
     make clean || true
     set -o pipefail
-    ./config --prefix=/app/local --openssldir=/app/local/openssl no-shared no-threads no-ssl2
+    ./config --prefix=/app/local --openssldir=/app/local/openssl shared no-ssl2
     make install
     popd
 else
-    echo "- Skipping openssl"
+    echo "- Skipping openssl (or already done)"
 fi
 
-if [[ -n "$ZLIB_VERSION" ]]; then
-    echo "+ Fetching zlib sources..."
-    mkdir -p /app/local
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/zlib-${ZLIB_VERSION}.tar.gz" -o - | tar xz
-    pushd zlib-${ZLIB_VERSION}
-    ./configure --prefix=/app/local --static
-    set +o pipefail
-    make install || true
-    set -o pipefail
-    popd
-else
-    echo "- Skipping zlib"
-fi
-
-if [[ -n "$LIBCURL_VERSION" ]]; then
+if [[ -n "$LIBCURL_VERSION" && ! -d curl-${LIBCURL_VERSION} ]]; then
     echo "+ Fetching libcurl sources..."
-    mkdir -p /app/local
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/curl-${LIBCURL_VERSION}.tar.gz" -o - | tar xz
+    FILE="curl-${LIBCURL_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
     pushd curl-${LIBCURL_VERSION}
-    ./configure --enable-static --disable-shared --prefix=/app/local --with-ssl=/app/local --with-zlib=/app/local --without-libidn --without-librtmp --disable-crypto-auth --disable-manual --disable-gopher --disable-smb --disable-smtp --disable-tftp --disable-telnet --disable-ldaps --disable-rtsp --disable-ldap LIBS=-ldl
-    make CFLAGS="${CFLAGS} -static-libgcc"
-    make install
-    popd
-else
-    echo "- Skipping libcurl"
-fi
-
-if [[ -n "$LIBMEMCACHED_VERSION" ]]; then
-    echo "+ Fetching libmemcached libraries..."
-    mkdir -p /app/local
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/libmemcached-${LIBMEMCACHED_VERSION}.tar.gz" -o - | tar xz
-    pushd libmemcached-${LIBMEMCACHED_VERSION}
-    ./configure --prefix=/app/local --enable-static --disable-shared
-    make install
-    popd
-else
-    echo "- Skipping libmemcached"
-fi
-
-if [[ -n "$LIBFREETYPE_VERSION" ]]; then
-    echo "+ Fetching freetype libraries..."
-    mkdir -p /app/local
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/freetype-${LIBFREETYPE_VERSION}.tar.gz" -o - | tar xz
-    pushd freetype-${LIBFREETYPE_VERSION}
-    ./configure --prefix=/app/local --enable-static --disable-shared
     set +o pipefail
-    make install || true
-    set -o pipefail
+    make clean || true
+    set -o pipefail   
+    ./configure --prefix=/app/local --with-ssl=/app/local --with-zlib=/app/local --without-libidn --without-librtmp --disable-crypto-auth --disable-manual --disable-gopher --disable-smb --disable-smtp --disable-tftp --disable-telnet --disable-ldaps --disable-rtsp --disable-ldap LIBS=-ldl
+    make 
+    make install
     popd
 else
-    echo "- Skipping Custom Freetype"
+    echo "- Skipping libcurl (or already done)"
 fi
 
-if [[ -n "$LIBJPEG_VERSION" ]]; then
-    echo "+ Fetching libjpeg libraries..."
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/jpegsrc.v${LIBJPEG_VERSION}.tar.gz" | tar xz
-    pushd jpeg-${LIBJPEG_VERSION}
+if [[ -n "$LIBMEMCACHED_VERSION" && ! -d libmemcached-${LIBMEMCACHED_VERSION} ]]; then
+    echo "+ Fetching libmemcached libraries..."
+    FILE="libmemcached-${LIBMEMCACHED_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd libmemcached-${LIBMEMCACHED_VERSION}
+    set +o pipefail
+    make clean || true
+    set -o pipefail
     ./configure --prefix=/app/local
     make install
     popd
 else
-    echo "- Skipping libjpeg"
+    echo "- Skipping libmemcached (or already done)"
 fi
 
-if [[ -n "$LIBJPEG_TURBO_VERSION" ]]; then
+if [[ -n "$LIBJPEG_VERSION" && ! -d jpeg-${LIBJPEG_VERSION} ]]; then
+    echo "+ Fetching libjpeg libraries..."
+    FILE="jpegsrc.v${LIBJPEG_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd jpeg-${LIBJPEG_VERSION}
+     set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --prefix=/app/local
+    make install
+    popd
+else
+    echo "- Skipping libjpeg (or already done)"
+fi
+
+if [[ -n "$LIBJPEG_TURBO_VERSION" && ! -d libjpeg-turbo-${LIBJPEG_TURBO_VERSION} ]]; then
     echo "+ Fetching libjpeg-turbo libraries..."
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz" | tar xz
+    FILE="libjpeg-turbo-${LIBJPEG_TURBO_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
     pushd libjpeg-turbo-${LIBJPEG_TURBO_VERSION}
     set +o pipefail
     make clean || true
     set -o pipefail
-    ./configure --prefix=/app/local --enable-static --disable-shared --with-ssl=/app/local
+    ./configure --prefix=/app/local  --disable-static
     make install
     popd
 else
-    echo "- Skipping libjpeg-turbo"
+    echo "- Skipping libjpeg-turbo (or already done)"
 fi
 
-if [[ -n "$LIBRABBITMQ_VERSION" ]]; then
-    echo "+ Fetching RABBITMQ-C libraries..."
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/rabbitmq-c-${LIBRABBITMQ_VERSION}.tar.gz" | tar xz
-    pushd rabbitmq-c-${LIBRABBITMQ_VERSION}
+if [[ -n "$LIBPNG_VERSION" && ! -d libpng-${LIBPNG_VERSION} ]]; then
+    echo "+ Fetching libpng libraries..."
+    FILE="libpng-${LIBPNG_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd libpng-${LIBPNG_VERSION}
+
+    set +o pipefail
+    make clean || true
+    set -o pipefail
     ./configure --prefix=/app/local
     make install
     popd
 else
-    echo "- Skipping RABBITMQ-C"
+    echo "- Skipping libjpeg (or already done)"
 fi
 
-if [[ -n "$LIBYAML_VERSION" ]]; then
-    echo "+ Fetching libyaml libraries..."
-    mkdir -p /app/local
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/libyaml-${LIBYAML_VERSION}.tar.gz" -o - | tar xz
-    pushd libyaml-${LIBYAML_VERSION}
-    ./bootstrap
-    ./configure --prefix=/app/local --enable-static --disable-shared --includedir=/app/local/include
+if [[ -n "$LIBRABBITMQ_VERSION" && ! -d rabbitmq-c-${LIBRABBITMQ_VERSION} ]]; then
+    echo "+ Fetching RABBITMQ-C libraries..."
+    FILE="rabbitmq-c-${LIBRABBITMQ_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd rabbitmq-c-${LIBRABBITMQ_VERSION}
+    set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --prefix=/app/local
     make install
     popd
 else
-    echo "- Skipping libyaml"
+    echo "- Skipping RABBITMQ-C (or already done)"
 fi
- 
+
+if [[ -n "$LIBYAML_VERSION" && ! -d libyaml-${LIBYAML_VERSION} ]]; then
+    echo "+ Fetching libyaml libraries..."
+    FILE="libyaml-${LIBYAML_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd libyaml-${LIBYAML_VERSION}
+    ./bootstrap
+    set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --prefix=/app/local --includedir=/app/local/include --disable-static
+    make install
+    popd
+else
+    echo "- Skipping libyaml (or already done)"
+fi
+
+if [[ -n "$LIBICONV_VERSION" && ! -d libiconv-${LIBICONV_VERSION} ]]; then
+    echo "+ Fetching libiconv libraries..."
+    FILE="libiconv-${LIBICONV_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd libiconv-${LIBICONV_VERSION}
+    set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --prefix=/app/local
+    set +o pipefail
+    make install || true
+    set -o pipefail
+    popd
+else
+    echo "- Skipping Custom libiconv (or already done)"
+fi
+
+if [[ -n "$LIBICU_VERSION" && ! -d icu-${LIBICU_VERSION} ]]; then
+    echo "+ Fetching libicu libraries..."
+    FILE="icu-${LIBICU_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    pushd icu-${LIBICU_VERSION}/source
+    set +o pipefail
+    make clean || true
+    set -o pipefail
+    ./configure --verbose --prefix=/app/local
+    make install
+    popd
+else
+    echo "- Skipping libicu (or already done)"
+fi
+
 echo "+ Fetching PHP sources..."
-curl -L "http://s3.amazonaws.com/${S3_BUCKET}/php-$PHP_VERSION.tar.gz"  -o - | tar xz
+FILE="php-$PHP_VERSION.tar.gz"
+fetch_package "${FILE}"
+tar -xzf ${FILE}
 
 pushd php-$PHP_VERSION
 
+echo "+ Initial Configuring PHP (for phpize and php-config)..."
+if [[ -f configure ]]; then
+    rm configure
+fi
+
+./buildconf --force
+make clean || true
+./configure \
+    --disable-all \
+    --disable-cgi \
+    --disable-fpm \
+    --enable-shared \
+    --disable-static \
+    --prefix=/app/vendor/php \
+    --with-config-file-path=/app/vendor/php \
+    --with-config-file-scan-dir=/app/vendor/php/etc.d
+
+make install
+
 pushd ext
+if [[ -n "$PHP_MEMCACHE_VERSION" ]]; then
+    echo "+ Installing PHP_Memcache..."
+    FILE="memcache-${PHP_MEMCACHE_VERSION}.tgz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    rm -rf memcache
+    mv -f memcache-${PHP_MEMCACHE_VERSION} memcache
+    pushd memcache
+    /app/vendor/php/bin/phpize
+    popd
+else
+    echo "- Skipping PHP_Memcache (or already done)"
+fi
 
-    if [[ -n "$PHP_MEMCACHE_VERSION" ]]; then
-        echo "+ Installing PHP_Memcache..."
-        curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcache-${PHP_MEMCACHE_VERSION}.tgz" | tar xz
-        mv memcache-${PHP_MEMCACHE_VERSION} memcache
-        pushd memcache
-        phpize
-        popd
-    else
-        echo "- Skipping PHP_Memcache"
-    fi
+if [[ -n "$PHP_MEMCACHED_VERSION" ]]; then
+    echo "+ Installing PHP_Memcached..."
+    FILE="memcached-${PHP_MEMCACHED_VERSION}.tgz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    rm -rf memcached
+    mv -f memcached-${PHP_MEMCACHED_VERSION} memcached
+    pushd memcached
+    /app/vendor/php/bin/phpize
+    popd
+else
+    echo "- Skipping PHP_Memcached (or already done)"
+fi
 
-    if [[ -n "$PHP_MEMCACHED_VERSION" ]]; then
-        echo "+ Installing PHP_Memcached..."
-        curl -L "http://s3.amazonaws.com/${S3_BUCKET}/memcached-${PHP_MEMCACHED_VERSION}.tgz" | tar xz
-        mv memcached-${PHP_MEMCACHED_VERSION} memcached
-        pushd memcached
-        phpize
-        popd
-    else
-        echo "- Skipping PHP_Memcached"
-    fi
+if [[ -n "$PHP_RABBITMQ_VERSION" ]]; then
+    echo "+ Installing PHP_RabbitMQ..."
+    FILE="amqp-${PHP_RABBITMQ_VERSION}.tgz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    rm -rf amqp
+    mv -f amqp-${PHP_RABBITMQ_VERSION} amqp
+    pushd amqp
+    /app/vendor/php/bin/phpize
+    popd
+else
+    echo "- Skipping PHP_RabbitMQ (or already done)"
+fi
 
-    if [[ -n "$PHP_RABBITMQ_VERSION" ]]; then
-        echo "+ Installing PHP_RabbitMQ..."
-        curl -L "http://s3.amazonaws.com/${S3_BUCKET}/amqp-${PHP_RABBITMQ_VERSION}.tgz" | tar xz
-        mv amqp-${PHP_RABBITMQ_VERSION} amqp
-        pushd amqp
-        phpize
-        popd
-    else
-        echo "- Skipping PHP_RabbitMQ"
-    fi
+if [[ -n "$XHPROF_VERSION" ]]; then
+    echo "+ Installing XHProf..."
+    FILE="xhprof-${XHPROF_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    rm -rf xhprof
+    mv -f xhprof-${XHPROF_VERSION} xhprof
+    pushd xhprof
+    /app/vendor/php/bin/phpize
+    popd
+else
+    echo "- Skipping XHProf (or already done)"
+fi
 
-    if [[ -n "$XHPROF_VERSION" ]]; then
-        echo "+ Installing XHProf..."
-        curl -L "https://s3.amazonaws.com/${S3_BUCKET}/xhprof-${XHPROF_VERSION}.tar.gz" | tar xz
-        mv xhprof-${XHPROF_VERSION} xhprof
-        pushd xhprof
-        phpize
-        popd
-    else
-        echo "- Skipping XHProf"
-    fi
+if [[ -n "$PHP_YAML_VERSION" ]]; then
+    echo "+ Installing PHP_YAML..."
+    FILE="yaml-${PHP_YAML_VERSION}.tgz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    rm -rf yaml
+    mv -f yaml-${PHP_YAML_VERSION} yaml
+    pushd yaml
+    /app/vendor/php/bin/phpize
+    popd
+else
+    echo "- Skipping PHP_YAML (or already done)"
+fi
 
-    if [[ -n "$PHP_YAML_VERSION" ]]; then
-        echo "+ Installing PHP_YAML..."
-        curl -L "http://s3.amazonaws.com/${S3_BUCKET}/yaml-${PHP_YAML_VERSION}.tgz" | tar xz
-        mv yaml-${PHP_YAML_VERSION} yaml
-        pushd yaml
-        phpize
-        popd
-    else
-        echo "- Skipping PHP_YAML"
-    fi
-
-    if [[ -n "$SUHOSIN_VERSION" ]]; then
-        echo "+ Installing Suhosin..."
-        curl -L "https://s3.amazonaws.com/${S3_BUCKET}/suhosin-${SUHOSIN_VERSION}.tar.gz" | tar xz
-        mv suhosin-${SUHOSIN_VERSION} suhosin
-        pushd suhosin
-        phpize
-        popd
-    else
-        echo "- Skipping Suhosin"
-    fi
+if [[ -n "$PHP_SUHOSIN_VERSION" ]]; then
+    echo "+ Installing Suhosin..."
+    FILE="suhosin-${PHP_SUHOSIN_VERSION}.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+    rm -rf suhosin
+    mv -f suhosin-${PHP_SUHOSIN_VERSION} suhosin
+    pushd suhosin
+    /app/vendor/php/bin/phpize
+    popd
+else
+    echo "- Skipping Suhosin (or already done)"
+fi
 popd
 
 echo "+ Configuring PHP..."
@@ -238,47 +429,47 @@ if [[ -f configure ]]; then
 fi
 
 ./buildconf --force
+make clean || true
 ./configure \
     --disable-all \
-    --enable-static \
     --prefix=/app/vendor/php \
     --with-config-file-path=/app/vendor/php \
     --with-config-file-scan-dir=/app/vendor/php/etc.d \
-    --with-bz2 \
     --with-curl=/app/local \
     --with-gd \
     --with-gettext \
-    --with-iconv \
+    --with-iconv=/app/local \
+    --with-iconv-dir=/app/local \
+    --with-icu-dir=/app/local \
     --with-jpeg-dir=/app/local \
+    --with-libxml-dir=/app/local \
+    --with-mcrypt=/app/local \
     --with-mhash \
     --with-mysql=mysqlnd \
     --with-mysqli=mysqlnd \
-    --with-pdo-mysql=mysqlnd \
     --with-openssl-dir=/app/local \
     --with-pcre-regex \
+    --with-pdo-mysql=mysqlnd \
     --with-png-dir=/app/local \
+    --with-yaml=/app/local \
     --with-zlib-dir=/app/local \
-    --with-yaml=/app/local/ \
     --enable-bcmath \
     --enable-cli \
+    --enable-memcached \
     --enable-fpm \
+    --enable-gd-native-ttf \
+    --enable-inline-optimization \
     --enable-intl \
     --enable-libxml \
     --enable-pdo \
     --enable-phar \
     --enable-mbstring \
     --enable-mbregex \
-    --enable-gd-native-ttf \
-    --enable-inline-optimization \
-    --enable-memcache \
-    --enable-memcached \
+    --enable-mysqlnd \
     --enable-session \
-    --enable-suhosin \
     --enable-zip \
-    --with-libmemcached-dir=/app/local --disable-memcached-sasl
-    # --enable-opcache \
-    # --enable-xhprof
-
+    --enable-shared \
+    --enable-static
 
 echo "+ Compiling PHP..."
 # build & install it
@@ -288,9 +479,13 @@ popd
 
 if [[ -n "$PHP_NEWRELIC_VERSION" ]]; then
     echo "+ Install newrelic..."
-    curl -L "http://s3.amazonaws.com/${S3_BUCKET}/newrelic-php5-${PHP_NEWRELIC_VERSION}-linux.tar.gz" | tar xz
+    FILE="newrelic-php5-${PHP_NEWRELIC_VERSION}-linux.tar.gz"
+    fetch_package "${FILE}"
+    tar -xzf ${FILE}
+
     pushd newrelic-php5-${PHP_NEWRELIC_VERSION}-linux
-    cp -f agent/x64/newrelic-`phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `php-config --extension-dir`/newrelic.so
+    mkdir -p `/app/vendor/php/bin/php-config --extension-dir`
+    cp -f agent/x64/newrelic-`/app/vendor/php/bin/phpize --version | grep "Zend Module Api No" | tr -d ' ' | cut -f 2 -d ':'`.so `/app/vendor/php/bin/php-config --extension-dir`/newrelic.so
     mkdir -p /app/vendor/php/newrelic
     cp -f daemon/newrelic-daemon.x64 /app/vendor/php/newrelic/newrelic-daemon.x64 && chmod +x /app/vendor/php/newrelic/newrelic-daemon.x64 && strip /app/vendor/php/newrelic/newrelic-daemon.x64
 
@@ -301,10 +496,6 @@ fi
 
 # update path
 export PATH=/app/vendor/php/bin:$PATH
-
-echo "+ Cleanup"
-rm -rf /app/local/include
-rm -rf /app/vendor/php/include
 
 pushd /app/
 echo "+ Stripping binaries..."

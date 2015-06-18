@@ -431,7 +431,6 @@ fi
 ./buildconf --force
 make clean || true
 ./configure \
-    --disable-all \
     --prefix=/app/vendor/php \
     --with-config-file-path=/app/vendor/php \
     --with-config-file-scan-dir=/app/vendor/php/etc.d \

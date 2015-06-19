@@ -12,7 +12,7 @@ if [ -n "$BUILDPACK_DEBUG" ]; then
     set -x
 fi
 
-BUILD_SUFFIX=".v15"
+BUILD_SUFFIX=".v16"
 BUILD_DIR="$1"
 CACHE_DIR="$2"
 

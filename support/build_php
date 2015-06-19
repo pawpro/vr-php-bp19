@@ -146,12 +146,12 @@ else
     echo "- Skipping zlib (or already done)"
 fi
 
-if [[ -n "$OPENSSL_VERSION" && ! -d openssl_${OPENSSL_VERSION} ]]; then
+if [[ -n "$OPENSSL_VERSION" && ! -d openssl-${OPENSSL_VERSION} ]]; then
     echo "+ Fetching openssl sources..."
-    FILE="openssl_${OPENSSL_VERSION}.tar.gz"
+    FILE="openssl-${OPENSSL_VERSION}.tar.gz"
     fetch_package "${FILE}"
     tar -xzf ${FILE}
-    pushd openssl_${OPENSSL_VERSION}
+    pushd openssl-${OPENSSL_VERSION}
     set +o pipefail
     make clean || true
     set -o pipefail
@@ -446,6 +446,7 @@ make clean || true
     --with-mhash \
     --with-mysql=mysqlnd \
     --with-mysqli=mysqlnd \
+    --with-openssl=/app/local \
     --with-openssl-dir=/app/local \
     --with-pcre-regex \
     --with-pdo-mysql=mysqlnd \
@@ -453,20 +454,20 @@ make clean || true
     --with-yaml=/app/local \
     --with-zlib-dir=/app/local \
     --enable-bcmath \
-    --enable-memcache \
-    --enable-fpm \
     --enable-gd-native-ttf \
     --enable-inline-optimization \
     --enable-intl \
     --enable-libxml \
+    --enable-opcache \
     --enable-pdo \
     --enable-phar \
     --enable-mbstring \
     --enable-mbregex \
+    --enable-memcache \
     --enable-mysqlnd \
     --enable-session \
     --enable-zip \
-    --disable-cli \
+    --enable-fpm \
     --disable-shared \
     --enable-static
 

@@ -12,7 +12,7 @@ if [ -n "$BUILDPACK_DEBUG" ]; then
     set -x
 fi
 
-BUILD_SUFFIX=".v19"
+BUILD_SUFFIX=".v16"
 BUILD_DIR="$1"
 CACHE_DIR="$2"
 
@@ -451,7 +451,7 @@ fi
 if [ -n "$BOOT_CMD" ]; then
     status "Preparing run commands"
     while read -r cmd; do
-        BOOT_CMDS="$BOOT_CMDS$cmd;" 
+        BOOT_CMDS="$BOOT_CMDS$cmd;"
     done <<< "$BOOT_CMD"
 fi
 

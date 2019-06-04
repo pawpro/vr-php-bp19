@@ -12,7 +12,7 @@ if [ -n "$BUILDPACK_DEBUG" ]; then
     set -x
 fi
 
-BUILD_SUFFIX=".v16"
+BUILD_SUFFIX=".v19"
 BUILD_DIR="$1"
 CACHE_DIR="$2"
 
@@ -248,19 +248,12 @@ export COMPOSER_HOME="${CACHE_DIR}/.composer"
 
 export_env_dir "$3"
 
-[ ! -d "$HOME/bin" ] && mkdir -p "$HOME/bin"
-# Download jq binary for JSON processing
-export PATH="$HOME/bin:$PATH"
-curl "${S3_BUCKET}.s3.amazonaws.com/bin/jq" -L -s -o - > "$HOME/bin/jq"
-chmod +x "$HOME/bin/jq"
-
-
 # START CONFIG
 S3_URL="http://${S3_BUCKET}.s3.amazonaws.com"
-NGINX_VERSION=1.8.0
-PHP_VERSION=5.5.26
+NGINX_VERSION=1.14.2
+PHP_VERSION=5.6.40
 NEWRELIC_VERSION=8.7.0.242
-MEMCACHED_VERSION=1.4.20
+MEMCACHED_VERSION=1.5.16
 REPO_URL=${S3_URL}
 
 DOCUMENT_ROOT=
@@ -316,6 +309,13 @@ fi
 echo "-----> Fetching Manifest"
 echo ${MANIFEST_URL} | indent
 download_url ${MANIFEST_URL}
+
+[ ! -d "$HOME/bin" ] && mkdir -p "$HOME/bin"
+# Download jq binary for JSON processing
+export PATH="$HOME/bin:$PATH"
+curl "${S3_BUCKET}.s3.amazonaws.com/bin/jq" -L -s -o - > "$HOME/bin/jq"
+chmod +x "$HOME/bin/jq"
+cp "$HOME/bin/jq" ${BUILD_DIR}/bin/jq
 
 # Nginx
 echo "-----> Installing Nginx"

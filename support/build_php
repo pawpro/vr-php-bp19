@@ -4,7 +4,7 @@ source set-env.sh
 
 set -e
 set -o pipefail
-
+set -x
 orig_dir=$( pwd )
 
 echo "+ Updating apt-get sources..."
@@ -17,7 +17,7 @@ function fetch_package() {
     FILE=$1
     if [ ! -f /root/vr/${FILE} ]; then
         pushd /root/vr
-        curl -L "http://s3.amazonaws.com/${S3_BUCKET}/${FILE}" -o ${FILE}
+        curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/${FILE}" -o ${FILE}
         popd
     fi
     cp /root/vr/${FILE} .
@@ -27,7 +27,7 @@ if [[ $1 == "clean" ]]; then
     echo "+ Cleaning up..."
     rm -rf /app
     rm -rf ${BUILD_DIR}
-    
+
     apt-get -y update
     apt-get -y install g++ \
     gcc \
@@ -35,13 +35,17 @@ if [[ $1 == "clean" ]]; then
     libtool \
     autoconf \
     git-core \
-    yasm
+    yasm \
+    libtool \
+    nasm
 
 fi
 mkdir -p /app/local
 mkdir -p ${BUILD_DIR}
 
 pushd ${BUILD_DIR}
+
+export CFLAGS="-fgnu89-inline"
 
 export CPPFLAGS="-I/app/local/include"
 export LDFLAGS="-L/app/local/lib"
@@ -58,7 +62,7 @@ if [[ -n "$LIBBZIP2_VERSION" && ! -d bzip2-${LIBBZIP2_VERSION} ]]; then
         # pushd /app/local/lib/
         #     ln -s libbz2.so.${LIBBZIP2_VERSION} libbz2.so.1.0
         #     ln -s libbz2.so.${LIBBZIP2_VERSION} libbz2.so
-        # popd 
+        # popd
     popd
 else
     echo "- Skipping libzip2 (or already done)"
@@ -137,7 +141,7 @@ if [[ -n "$ZLIB_VERSION" && ! -d zlib-${ZLIB_VERSION} ]]; then
     set +o pipefail
     make clean || true
     set -o pipefail
-    ./configure --prefix=/app/local 
+    ./configure --prefix=/app/local
     set +o pipefail
     make install || true
     set -o pipefail
@@ -170,9 +174,9 @@ if [[ -n "$LIBCURL_VERSION" && ! -d curl-${LIBCURL_VERSION} ]]; then
     pushd curl-${LIBCURL_VERSION}
     set +o pipefail
     make clean || true
-    set -o pipefail   
+    set -o pipefail
     ./configure --prefix=/app/local --with-ssl=/app/local --with-zlib=/app/local --without-libidn --without-librtmp --disable-crypto-auth --disable-manual --disable-gopher --disable-smb --disable-smtp --disable-tftp --disable-telnet --disable-ldaps --disable-rtsp --disable-ldap LIBS=-ldl
-    make 
+    make
     make install
     popd
 else
@@ -201,7 +205,7 @@ if [[ -n "$LIBJPEG_VERSION" && ! -d jpeg-${LIBJPEG_VERSION} ]]; then
     fetch_package "${FILE}"
     tar -xzf ${FILE}
     pushd jpeg-${LIBJPEG_VERSION}
-     set +o pipefail
+    set +o pipefail
     make clean || true
     set -o pipefail
     ./configure --prefix=/app/local
@@ -220,7 +224,7 @@ if [[ -n "$LIBJPEG_TURBO_VERSION" && ! -d libjpeg-turbo-${LIBJPEG_TURBO_VERSION}
     set +o pipefail
     make clean || true
     set -o pipefail
-    ./configure --prefix=/app/local  --disable-static
+    ./configure --prefix=/app/local --disable-static
     make install
     popd
 else

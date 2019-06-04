@@ -3,7 +3,7 @@ source set-env.sh
 
 set -e
 set -o pipefail
-
+set -x
 orig_dir=$( pwd )
 
 BUILD_DIR="/tmp/build"
@@ -12,11 +12,22 @@ orig_dir=$( pwd )
 mkdir -p ${BUILD_DIR}
 pushd ${BUILD_DIR}
 
+echo "+ Fetching libevent sources..."
+# rm -rf /app/vendor/memcached
+# mkdir -p /app/vendor/memcached
+mkdir -p /app/local
+curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/libevent-${LIBEVENT_VERSION}.tar.gz" -o - | tar xz
+pushd libevent-${LIBEVENT_VERSION}
+./configure --prefix=/app/local
+make
+make install
+popd
+
 echo "+ Fetching memcached server sources..."
 rm -rf /app/vendor/memcached
 mkdir -p /app/vendor/memcached
-curl -L "https://s3.amazonaws.com/${S3_BUCKET}/memcached-server-${MEMCACHED_VERSION}.tar.gz" -o - | tar xz
-pushd memcached-server-${MEMCACHED_VERSION}
+curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/memcached-${MEMCACHED_VERSION}.tar.gz" -o - | tar xz
+pushd memcached-${MEMCACHED_VERSION}
 ./configure --prefix=/app/vendor/memcached --with-libevent=/app/local
 make
 make install

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 export S3_BUCKET="yg-php-buildpack-opi"
-export BUILD_SUFFIX=".v16"
+export BUILD_SUFFIX=".v19"
 
 # LIBS
 #export LIBJPEG_VERSION="9a"
@@ -27,7 +27,7 @@ export LIBEVENT_VERSION="2.0.22-stable"
 export PHP_VERSION="5.5.26"
 #export PHP_MEMCACHED_VERSION="2.2.0"
 export PHP_MEMCACHE_VERSION="3.0.8"
-export PHP_NEWRELIC_VERSION="4.10.1.62"
+export PHP_NEWRELIC_VERSION="8.7.0.242"
 export PHP_YAML_VERSION="1.1.1"
 export PHP_SUHOSIN_VERSION="0.9.38"
 #export XHPROF_VERSION="0.9.4"

@@ -279,6 +279,14 @@ PHP_LIBS_URL="${REPO_URL}/${PHP_LIBS_FILE}"
 MEMCACHED_URL="${REPO_URL}/${MEMCACHED_FILE}"
 COMPOSER_URL="http://getcomposer.org/composer.phar"
 
+mkdir -p $BUILD_DIR $CACHE_DIR ${BUNDLE_DIR} ${BUILD_DIR}/local ${COMPOSER_HOME} ${BUILD_DIR}/.profile.d $BUILD_DIR/vendor
+
+[ ! -d "$HOME/bin" ] && mkdir -p "$HOME/bin"
+# Download jq binary for JSON processing
+export PATH="$HOME/bin:$PATH"
+curl "${S3_BUCKET}.s3.amazonaws.com/bin/jq" -L -s -o - > "$HOME/bin/jq"
+chmod +x "$HOME/bin/jq"
+cp "$HOME/bin/jq" ${BUILD_DIR}/bin/jq
 
 # Read config variables from composer.json if it exists
 if [ -f "$BUILD_DIR/composer.json" ]; then
@@ -292,11 +300,7 @@ if [ -f "$BUILD_DIR/composer.json" ]; then
     USER_LOG_FILES=$(package_log_files)
 fi
 
-[ ! -d "$BUILD_DIR/vendor" ] && mkdir -p "$BUILD_DIR/vendor"
-
 #################### INSTALL STUFF
-
-mkdir -p $BUILD_DIR $CACHE_DIR ${BUNDLE_DIR} ${BUILD_DIR}/local ${COMPOSER_HOME} ${BUILD_DIR}/.profile.d
 
 pushd ${BUNDLE_DIR} > /dev/null
 
@@ -310,12 +314,7 @@ echo "-----> Fetching Manifest"
 echo ${MANIFEST_URL} | indent
 download_url ${MANIFEST_URL}
 
-[ ! -d "$HOME/bin" ] && mkdir -p "$HOME/bin"
-# Download jq binary for JSON processing
-export PATH="$HOME/bin:$PATH"
-curl "${S3_BUCKET}.s3.amazonaws.com/bin/jq" -L -s -o - > "$HOME/bin/jq"
-chmod +x "$HOME/bin/jq"
-cp "$HOME/bin/jq" ${BUILD_DIR}/bin/jq
+
 
 # Nginx
 echo "-----> Installing Nginx"

@@ -279,9 +279,10 @@ PHP_LIBS_URL="${REPO_URL}/${PHP_LIBS_FILE}"
 MEMCACHED_URL="${REPO_URL}/${MEMCACHED_FILE}"
 COMPOSER_URL="http://getcomposer.org/composer.phar"
 
-mkdir -p $BUILD_DIR $CACHE_DIR ${BUNDLE_DIR} ${BUILD_DIR}/local ${COMPOSER_HOME} ${BUILD_DIR}/.profile.d $BUILD_DIR/vendor
+mkdir -p $BUILD_DIR $CACHE_DIR ${BUNDLE_DIR} ${BUILD_DIR}/local ${BUILD_DIR}/vendor ${BUILD_DIR}/bin ${COMPOSER_HOME} ${BUILD_DIR}/.profile.d
 
 [ ! -d "$HOME/bin" ] && mkdir -p "$HOME/bin"
+
 # Download jq binary for JSON processing
 export PATH="$HOME/bin:$PATH"
 curl "${S3_BUCKET}.s3.amazonaws.com/bin/jq" -L -s -o - > "$HOME/bin/jq"

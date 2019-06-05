@@ -17,11 +17,12 @@ function fetch_package() {
     FILE=$1
     if [ ! -f /root/vr/${FILE} ]; then
         pushd /root/vr
-        curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/${FILE}" -o ${FILE}
+        curl -L "https://${S3_BUCKET}.s3.amazonaws.com/${FILE}" -o ${FILE}
         popd
     fi
     cp /root/vr/${FILE} .
 }
+
 
 if [[ $1 == "clean" ]]; then
     echo "+ Cleaning up..."

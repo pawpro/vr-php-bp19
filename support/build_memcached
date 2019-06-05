@@ -16,7 +16,7 @@ echo "+ Fetching libevent sources..."
 # rm -rf /app/vendor/memcached
 # mkdir -p /app/vendor/memcached
 mkdir -p /app/local
-curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/libevent-${LIBEVENT_VERSION}.tar.gz" -o - | tar xz
+curl -L "https://${S3_BUCKET}.s3.amazonaws.com/libevent-${LIBEVENT_VERSION}.tar.gz" -o - | tar xz
 pushd libevent-${LIBEVENT_VERSION}
 ./configure --prefix=/app/local
 make
@@ -26,7 +26,7 @@ popd
 echo "+ Fetching memcached server sources..."
 rm -rf /app/vendor/memcached
 mkdir -p /app/vendor/memcached
-curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/memcached-${MEMCACHED_VERSION}.tar.gz" -o - | tar xz
+curl -L "https://${S3_BUCKET}.s3.amazonaws.com/memcached-${MEMCACHED_VERSION}.tar.gz" -o - | tar xz
 pushd memcached-${MEMCACHED_VERSION}
 ./configure --prefix=/app/vendor/memcached --with-libevent=/app/local
 make

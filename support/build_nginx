@@ -28,7 +28,7 @@ pushd ${BUILD_DIR}
 if [[ -n "$NGINX_VERSION" ]]; then
     echo "+ Fetching Nginx ..."
     mkdir -p /app/local
-    curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/nginx-${NGINX_VERSION}.tar.gz" -o - | tar xz
+    curl -L "https://${S3_BUCKET}.s3.amazonaws.com/nginx-${NGINX_VERSION}.tar.gz" -o - | tar xz
 else
     echo "- Skipping Nginx"
 fi
@@ -36,7 +36,7 @@ fi
 if [[ -n "$PCRE_VERSION" ]]; then
     echo "+ Fetching PCRE..."
     pushd nginx-$NGINX_VERSION/contrib
-    curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/pcre-${PCRE_VERSION}.tar.gz" -o - | tar xz
+    curl -L "https://${S3_BUCKET}.s3.amazonaws.com/pcre-${PCRE_VERSION}.tar.gz" -o - | tar xz
     popd
 else
     echo "- Skipping PCRE"
@@ -45,7 +45,7 @@ fi
 if [[ -n "$ZLIB_VERSION" ]]; then
     echo "+ Fetching zlib sources..."
     pushd nginx-$NGINX_VERSION/contrib
-    curl -L "https://${S3_BUCKET}.s3.amazonaws.com/php/sources/zlib-${ZLIB_VERSION}.tar.gz" -o - | tar xz
+    curl -L "https://${S3_BUCKET}.s3.amazonaws.com/zlib-${ZLIB_VERSION}.tar.gz" -o - | tar xz
     popd
 else
     echo "- Skipping zlib (or already done)"
